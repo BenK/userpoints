@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.1 2005-06-21 00:59:48 kbahey Exp $
+//$Id: userpoints.module,v 1.2 2005-06-22 23:23:38 kbahey Exp $
 
 // Copyright 2005 Khalid Baheyeldin http://2bits.com
 
@@ -147,8 +147,10 @@ function userpoints_nodeapi(&$node, $op, $teaser, $page) {
       }
       break;
     default:
-      watchdog('userpoints', t('Node type "%d" not configured in userpoints module', $node->type));
-      $points = 1;
+      // Node type is not defined, log a message
+      watchdog('userpoints',
+        t('Node type "%type" not configured in userpoints module',
+        array('%type' => $node->type)));
       break;
     }
 }
