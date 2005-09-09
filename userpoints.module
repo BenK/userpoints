@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.10 2005-09-08 02:39:48 kbahey Exp $
+//$Id: userpoints.module,v 1.11 2005-09-09 03:09:41 kbahey Exp $
 
 // Copyright 2005 Khalid Baheyeldin http://2bits.com
 
@@ -36,7 +36,7 @@ function userpoints_perm() {
 
 function userpoints_settings() {
   
-  foreach (node_list() as $type => $module) {
+  foreach (node_list() as $type) {
     $name = node_invoke($type, 'node_name');
     $output .= form_textfield (t('Points for posting an %node-name', array('%node-name' => $name)),
       'userpoints_post_'. $type, variable_get('userpoints_post_'. $type, '1'), 5, 5);
