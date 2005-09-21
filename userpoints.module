@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.13 2005-09-21 03:30:14 kbahey Exp $
+//$Id: userpoints.module,v 1.14 2005-09-21 04:14:34 kbahey Exp $
 
 // Copyright 2005 Khalid Baheyeldin http://2bits.com
 
@@ -162,6 +162,19 @@ function userpoints_nodeapi(&$node, $op, $teaser, $page) {
       $points = -$points;
       _userpoints_update_points($points, "op=$op type=".$node->type, $node->uid);
       break;
+    case 'update':
+      $orig_node = node_load(array('nid' => $node->nid));
+      if ($node->uid != $orig_node->uid) {
+        // subtract from the original node owner
+        $points = -$points;
+        _userpoints_update_points($points, "op=$op type=".$node->type, $orig_node->uid);
+
+        // Add to the new node owner
+        $points = -$points;
+        _userpoints_update_points($points, "op=$op type=".$node->type, $node->uid);
+      }
+      break;
+
   }
 }
 
