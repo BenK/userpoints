@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.23 2006-01-02 18:34:03 kbahey Exp $
+//$Id: userpoints.module,v 1.24 2006-01-14 02:50:55 kbahey Exp $
 
 // Copyright 2005 Khalid Baheyeldin http://2bits.com
 
@@ -194,7 +194,8 @@ function userpoints_user($op, &$edit, &$user, $category = '') {
       break;
     case 'view':
       $points = (int) db_result(db_query('SELECT points FROM {userpoints} WHERE uid = %d', $user->uid));
-      return array(t('Points') => form_item(t('Points'), $points));
+      return array(t('Points') => $form[] = array(
+        '#default_value' => $points));
       break;
   }
 }
