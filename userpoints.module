@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.24 2006-01-14 02:50:55 kbahey Exp $
+//$Id: userpoints.module,v 1.25 2006-01-21 02:47:20 kbahey Exp $
 
 // Copyright 2005 Khalid Baheyeldin http://2bits.com
 
@@ -504,3 +504,6 @@ function userpoints_paymentapi(&$txn, $op, $arg = '') {
   }
 }
 
+function userpoints_update_1() {
+  return _system_update_utf8(array('userpoints'));
+}
