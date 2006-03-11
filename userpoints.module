@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.28 2006-01-28 17:11:54 kbahey Exp $
+//$Id: userpoints.module,v 1.29 2006-03-11 01:41:24 kbahey Exp $
 
 // Copyright 2005 Khalid Baheyeldin http://2bits.com
 
@@ -207,7 +207,7 @@ function userpoints_settings() {
   
   $form[$group]['reset'] = array(
     '#title' => t('Reset points'),
-    '#value' => l('userpoints_reset', t('Reset the points for all users.')),
+    '#value' => l(t('Reset the points for all users.'), 'userpoints_reset'),
   );
   return $form;
 }  
