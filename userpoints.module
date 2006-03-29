@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.29 2006-03-11 01:41:24 kbahey Exp $
+//$Id: userpoints.module,v 1.30 2006-03-29 01:52:40 wafaa Exp $
 
 // Copyright 2005 Khalid Baheyeldin http://2bits.com
 
@@ -72,13 +72,10 @@ function userpoints_reset() {
 }
 
 function userpoints_reset_submit($form_id, $edit) {
-  if ($edit['reset']) {
-    if ($edit['confirm'] == t('YES')) {
-      db_query('DELETE FROM {userpoints}');
-      drupal_set_message(t('All user points have been reset!'));
-    }
+  if ($edit['confirm'] == t('YES')) {
+    db_query('DELETE FROM {userpoints}');
+    drupal_set_message(t('All user points have been reset!'));
   }
-
   drupal_goto();
 }
 
