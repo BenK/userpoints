@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.34 2006-07-08 17:41:56 kbahey Exp $
+//$Id: userpoints.module,v 1.35 2006-07-15 17:17:31 kbahey Exp $
 
 // Copyright 2005 Khalid Baheyeldin http://2bits.com
 
@@ -264,7 +264,7 @@ function userpoints_block($op = 'list', $delta = 0, $edit = array()) {
   $num = 5;
 
   $block_title = array();
-  $block_title[] = t('User points');
+  $block_title[] = $user->name . t('\'s points');
   $block_title[] = t('Highest users');
 
   switch ($op) {
