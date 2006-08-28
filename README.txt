@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.3 2006-08-27 21:46:17 kbahey Exp $
+$Id: README.txt,v 1.4 2006-08-28 17:05:18 kbahey Exp $
 
 Copyright 2005 http://2bits.com
 
@@ -95,7 +95,7 @@ Bugs/Features/Patches:
 ----------------------
 If you want to report bugs, feature requests, or submit a patch, please do so
 at the project page on the Drupal web site.
-http://drupal.org/project/nodevote
+http://drupal.org/project/userpoints
 
 Author
 ------
