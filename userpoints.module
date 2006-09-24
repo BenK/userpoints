@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.39 2006-09-17 03:10:04 kbahey Exp $
+//$Id: userpoints.module,v 1.40 2006-09-24 01:30:04 kbahey Exp $
 
 // Copyright 2005 Khalid Baheyeldin http://2bits.com
 
@@ -112,10 +112,10 @@ function userpoints_settings() {
     );
   }
 
-  if (module_exist('user_referral')) {
+  if (module_exist('referral')) {
     $form[$group][USERPOINTS_REFERRAL] = array(
       '#type' => 'textfield',
-      '#title' => t('%Points for referring a user (requires the user_referral module)', userpoints_translation()),
+      '#title' => t('%Points for referring a user (requires the referral module)', userpoints_translation()),
       '#default_value' => variable_get(USERPOINTS_REFERRAL, 0),
       '#size' => 5,
       '#maxlength' => 5,
