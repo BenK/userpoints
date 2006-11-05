@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.42 2006-10-22 19:55:16 kbahey Exp $
+//$Id: userpoints.module,v 1.43 2006-11-05 00:14:51 kbahey Exp $
 
 // Copyright 2005 Khalid Baheyeldin http://2bits.com
 
@@ -247,7 +247,7 @@ function userpoints_user($op, &$edit, &$user, $category = '') {
 function userpoints_list_users() {
   $sql = "SELECT p.uid, u.name, p.points
     FROM {userpoints} p INNER JOIN {users} u USING (uid)
-    GROUP BY p.uid";
+    GROUP BY p.uid,u.name,p.points";
   $sql_cnt = "SELECT COUNT(DISTINCT(uid)) FROM {userpoints}";
   $header = array(
     array('data' => t('User'), 'field' => 'u.name'),
