@@ -1,0 +1,5 @@
+; $Id: userpoints.info,v 1.2 2006-12-09 18:03:31 kbahey Exp $
+name = User points
+description = User gain points as they perform actions
+package = 
+version = "$Name:  $"
