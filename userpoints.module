@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.44 2006-12-09 17:00:52 kbahey Exp $
+//$Id: userpoints.module,v 1.45 2007-01-04 19:37:07 kbahey Exp $
 
 // Copyright 2005 Khalid Baheyeldin http://2bits.com
 
@@ -64,7 +64,7 @@ function userpoints_menu($may_cache) {
       'description' => t('Userpoints settings.'),
       'callback' => 'drupal_get_form',
       'callback arguments' => 'userpoints_settings',
-      'access'   => user_access(USERPOINTS_PERM_VIEW),
+      'access'   => user_access(USERPOINTS_PERM_ADMIN),
       'type' => MENU_NORMAL_ITEM,);
   }
 
