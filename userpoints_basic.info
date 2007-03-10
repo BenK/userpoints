@@ -1,0 +1,6 @@
+; $Id: userpoints_basic.info,v 1.1.2.2 2007-03-10 14:54:50 kbahey Exp $
+name = Userpoints Basic
+description = Some basic interfaces for userpoints, such as posting nodes, comments, ...etc.
+package = Userpoints
+dependencies = userpoints
+version = "$Name:  $"
