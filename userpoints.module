@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.44.2.2 2007-03-10 14:54:49 kbahey Exp $
+//$Id: userpoints.module,v 1.44.2.3 2007-03-11 15:01:37 kbahey Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -295,7 +295,7 @@ function userpoints_userpointsapi($op, $points = 0, $uid = 0, $event = NULL, $de
 
   if (_userpoints_user_exists($uid)) {
     db_query("UPDATE {userpoints}
-      SET points = '%d', max_points = '%d', last_update = '%d' WHERE uid = %d",
+      SET points = %d, max_points = %d, last_update = %d WHERE uid = %d",
       $current_points,
       $max_points,
       time(),
@@ -303,7 +303,7 @@ function userpoints_userpointsapi($op, $points = 0, $uid = 0, $event = NULL, $de
   }
   else {
     $result = db_query("INSERT INTO {userpoints}
-      VALUES ('%d', '%d', '%d', '%d')",
+      VALUES (%d, %d, %d, %d)",
       $uid,
       $current_points,
       $max_points,
