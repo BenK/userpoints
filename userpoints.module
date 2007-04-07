@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.44.2.3 2007-03-11 15:01:37 kbahey Exp $
+//$Id: userpoints.module,v 1.44.2.4 2007-04-07 03:37:30 kbahey Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -417,11 +417,11 @@ function userpoints_admin_approve() {
 }
 
 function userpoints_admin_txn() {
-  $mode = arg(4);
+  $mode = arg(3);
   $timestamp = format_date(time(), 'custom', 'Y-m-d H:i O');
 
   if ($mode == 'edit') {
-    $txn_id = (int)arg(5);
+    $txn_id = (int)arg(3);
       if ($txn_id) {
         $result = db_query('SELECT * FROM {userpoints_txn} WHERE txn_id = %d', $txn_id);
         $txn = db_fetch_object($result);
