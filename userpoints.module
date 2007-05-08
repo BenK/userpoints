@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.44.2.5 2007-04-07 03:59:53 kbahey Exp $
+//$Id: userpoints.module,v 1.44.2.6 2007-05-08 01:53:56 kbahey Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -434,20 +434,20 @@ function userpoints_admin_txn() {
     '#type'          => 'textfield',
     '#title'         => t('User ID'),
     '#size'          => 10,
-    '#maxlength'     => 7,
+    '#maxlength'     => 10,
     '#default_value' => $txn->uid,
     '#description'   => t('Drupal User ID for the user you want the points to affect'),
     );
-  
+
   $form['points'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Points'),
     '#size'          => 10,
-    '#maxlength'     => 7,
+    '#maxlength'     => 10,
     '#default_value' => $txn->points,
     '#description'   => t('Number of points to add/subtract from the user. For example, 25 (to add points) or -25 (to subtract points).'),
     );
-  
+
   $form['time_stamp'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Date/Time'),
@@ -464,37 +464,37 @@ function userpoints_admin_txn() {
     '#width'         => 70,
     '#lines'         => 5,
     '#description'   => t('Enter an optional description for this transaction, such as the reason it is created.'),
-    );  
-      
+    );
+
   switch($mode) {
     case 'add':
       $form['approver_uid'] = array(
         '#type'  => 'hidden',
         '#value' => $user->uid,
-        ); 
-      
+        );
+
       $form['event'] = array(
         '#type'  => 'hidden',
         '#value' => 'admin',
-        );  
-      
+        );
+
       $form['status'] = array(
         '#type'  => 'hidden',
         '#value' => USERPOINTS_TXN_STATUS_PENDING,
         );
-      
+
       $form['mode'] = array(
         '#type'  => 'hidden',
         '#value' => $mode,
         );
       break;
-      
+
    case 'edit':
      $form['txn_id'] = array(
        '#type'  => 'hidden',
        '#value' => $txn->txn_id,
-       ); 
-     
+       );
+
      $form['approver_uid'] = array(
        '#type'  => 'textfield',
        '#description' => t('Approver ID'),
@@ -502,8 +502,8 @@ function userpoints_admin_txn() {
        '#size'          => 10,
        '#maxlength'     => 7,
        '#description'   => t('The user ID of the person who approved this transaction. 0 means not yet approved.'),
-       ); 
-    
+       );
+
       $form['event'] = array(
         '#type'  => 'textfield',
         '#description' => t('Event'),
@@ -511,8 +511,8 @@ function userpoints_admin_txn() {
         '#size'          => 20,
         '#maxlength'     => 20,
         '#description'   => t('The event type for this transaction. Normally, it is "admin".'),
-        );  
-      
+        );
+
       $form['status'] = array(
         '#title' => t('Approval status'),
         '#type' => 'radios', 
@@ -522,12 +522,12 @@ function userpoints_admin_txn() {
         );
       break;
   }
-      
+
   $form['mode'] = array(
       '#type'  => 'hidden',
       '#default_value' => $mode
       );
-    
+
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
@@ -540,7 +540,7 @@ function userpoints_admin_txn_submit($form_id, $form = NULL) {
   if ($form_id != 'userpoints_admin_txn') {
     return;
   }
-  
+
   switch($form['mode']) {
     case 'add':
       userpoints_userpointsapi('points', $form['points'], $form['uid'], 'admin', $form['description']);
