@@ -1,5 +1,5 @@
 <?php
-// $Id: userpoints.install,v 1.2.2.2 2007-03-10 14:54:49 kbahey Exp $
+// $Id: userpoints.install,v 1.2.2.3 2007-05-23 03:21:15 kbahey Exp $
 
 /**
  * Install the initial schema.
@@ -28,6 +28,15 @@ function userpoints_install() {
           PRIMARY KEY (txn_id)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
  }
+}
+
+/**
+* Implementation of hook_uninstall().
+*/
+function userpoints_uninstall() {
+  db_query('DROP TABLE {userpoints}');
+  db_query('DROP TABLE {userpoints_txn}');
+  db_query("DELETE FROM {variable} WHERE name like '%userpoints%'");
 }
 
 function userpoints_update_1() {
