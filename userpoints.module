@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.53 2007-06-28 20:09:17 kbahey Exp $
+//$Id: userpoints.module,v 1.54 2007-06-29 22:14:37 kbahey Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -651,9 +651,8 @@ function userpoints_block($op = 'list', $delta = 0, $edit = array()) {
             $title = t('@user\'s !points', array_merge(array('@user' => $user->name), userpoints_translation()));;
             if ($user->uid) {
               $points = (int) db_result(db_query('SELECT points FROM {userpoints} WHERE uid = %d', $user->uid));
-              $singular = t('!point', userpoints_translation());
-              $plural = t('!points', userpoints_translation());
-              $content = t('You have %p %c', array('%p' => $points, '%c' => format_plural($points, $singular, $plural)));
+              $show_points = format_plural($points, t('!point', userpoints_translation()), t('!points', userpoints_translation()));
+              $content = t('You have %p %c', array('%p' => $points, '%c' => $show_points));
             }
             else {
               $content = t('!Points are visible to logged in users only',userpoints_translation());
