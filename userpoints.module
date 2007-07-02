@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.55 2007-07-02 03:16:32 kbahey Exp $
+//$Id: userpoints.module,v 1.56 2007-07-02 16:50:53 kbahey Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -590,7 +590,7 @@ function userpoints_admin_txn_submit($form_id, $form = NULL) {
   $txn_user = user_load(array('name' => $form['txn_user']));
   switch($form['mode']) {
     case 'add':
-      userpoints_userpointsapi('points', $form['points'], $form['uid'], 'admin', $form['description'], $form['reference']);
+      userpoints_userpointsapi('points', $form['points'], $txn_user->uid, 'admin', $form['description'], $form['reference']);
       break;
       
     case 'edit':
