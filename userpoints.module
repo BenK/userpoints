@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.44.2.13 2007-07-02 16:50:04 kbahey Exp $
+//$Id: userpoints.module,v 1.44.2.14 2007-08-28 01:28:57 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -142,7 +142,7 @@ function userpoints_menu($may_cache) {
  * Implementation of hook_perm().
  */
 function userpoints_perm() {
-  return array (USERPOINTS_PERM_VIEW, USERPOINTS_PERM_USE, USERPOINTS_PERM_ADMIN);
+  return array(USERPOINTS_PERM_VIEW, USERPOINTS_PERM_USE, USERPOINTS_PERM_ADMIN);
 }
 
 /**
@@ -235,18 +235,18 @@ function userpoints_userpointsapi($op, $points = 0, $uid = 0, $event = NULL, $de
 
   // When called explicitly, we handle only three cases. The rest are hooks
   // that should be defined in other modules.
-  if($op != 'points' && $op != 'txn approve' && $op != 'points approved'){
+  if ($op != 'points' && $op != 'txn approve' && $op != 'points approved') {
     return FALSE;
   }
 
   // Load the user
-  $user = user_load(array('uid'=>$uid));
+  $user = user_load(array('uid' => $uid));
   
   // Call the _userpoints hook, and stop if one of them returns FALSE
   // This will be handy later
   $rc = module_invoke_all('userpoints', 'points before', $points, $uid, $event);
 
-  foreach($rc as $key => $value) {
+  foreach ($rc as $key => $value) {
     if ($value == FALSE) {
       // Do not process the points
       return FALSE;
@@ -359,7 +359,7 @@ function _userpoints_user_exists($uid) {
 }
 
 function userpoints_user($op, &$edit, &$account, $category = '') {
-  switch($op) {
+  switch ($op) {
     case 'delete':
       // The user is being deleted, delete all traces in userpoints and txn tables
       db_query('DELETE FROM {userpoints} WHERE uid = %d', $account->uid);
@@ -395,15 +395,15 @@ function userpoints_admin_manage() {
   $sql .= tablesort_sql($header);
   $result = pager_query($sql, USERPOINTS_PAGE_COUNT, 0, NULL, USERPOINTS_TXN_STATUS_PENDING);
     while ($data = db_fetch_object($result)) {
-      $user = user_load(array('uid'=>$data->uid));
+      $user = user_load(array('uid' => $data->uid));
       $rows[] = array(
         array('data' => theme('username', $user)),
         array('data' => format_date($data->time_stamp, 'custom', 'Y-m-d H:i')),
         array('data' => $data->points, 'align' => 'right'),
         array('data' => $data->event),
         array('data' => l('approve', "admin/user/userpoints/approve/$data->txn_id") .
-                  ' ' . l('decline', "admin/user/userpoints/decline/$data->txn_id") .
-                  ' ' . l('edit',    "admin/user/userpoints/edit/$data->txn_id")
+                  ' '. l('decline', "admin/user/userpoints/decline/$data->txn_id") .
+                  ' '. l('edit',    "admin/user/userpoints/edit/$data->txn_id")
              ),
       );
     }
@@ -419,7 +419,7 @@ function userpoints_admin_approve() {
   $op = arg(3);
   $txn_id = (int)arg(4);
   if ($txn_id) {
-    switch($op) {
+    switch ($op) {
       case 'approve':
         $result = db_query("SELECT uid, event, points, description, reference
           FROM {userpoints_txn}
@@ -512,7 +512,7 @@ function userpoints_admin_txn() {
     '#description'   => t('Enter optional reference for this transaction. This field will be indexed and searchable.'),
     ); 
 
-  switch($mode) {
+  switch ($mode) {
     case 'add':
       $form['approver_uid'] = array(
         '#type'  => 'hidden',
@@ -588,7 +588,7 @@ function userpoints_admin_txn_submit($form_id, $form = NULL) {
   }
 
   $txn_user = user_load(array('name' => $form['txn_user']));
-  switch($form['mode']) {
+  switch ($form['mode']) {
     case 'add':
       userpoints_userpointsapi('points', $form['points'], $txn_user->uid, 'admin', $form['description'], $form['reference']);
       break;
@@ -658,7 +658,7 @@ function userpoints_block($op = 'list', $delta = 0, $edit = array()) {
               $content = t('You have %p %c', array('%p' => $points, '%c' => $show_points));
             }
             else {
-              $content = t('!Points are visible to logged in users only',userpoints_translation());
+              $content = t('!Points are visible to logged in users only', userpoints_translation());
             }
             break;
 
