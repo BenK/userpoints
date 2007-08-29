@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.44.2.14.2.1 2007-08-28 17:23:57 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.2 2007-08-29 23:27:12 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -201,6 +201,69 @@ function userpoints_admin_settings() {
   '#size' => 20,
   '#maxlength' => 20,
   );
+  $group = "Points expiration";
+  $form[$group] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('Points expiration'),
+    '#description' =>t('These settings affect new points only, they are not retroactive'),
+  );
+
+  $form[$group][USERPOINTS_EXPIREAFTER_DATE] = array(
+    '#type' => 'select',
+    '#title' => t('Expire !points after',userpoints_translation()),
+    '#description' => t('Once points have been obtained by the user 
+                          they will expire according to this setting'),
+    '#options' => expiry_dates(),
+    '#default_value' => variable_get(USERPOINTS_EXPIREAFTER_DATE, NULL),
+  );
+
+    /*******************************************************
+     * If the expiration date is earlier than today 
+     * new points will last forever. Although this may be desirable
+     * it could also be an oversight so we'll display a message
+     * to the administrator
+     ********************************************************
+    */
+  $warning="";
+  if (
+       userpoints_date_to_timestamp(
+         variable_get(USERPOINTS_EXPIREON_DATE,
+                      array('day'=> 1,'month'=>1,'year'=>1900)
+                      )
+       ) < time()
+    ) {
+    $warning = '<br /><strong>'. t('This setting will not take affect, date must be in the future') .'</strong>';
+  }
+
+  $form[$group][USERPOINTS_EXPIREON_DATE] = array(
+    '#type' => 'date',
+    '#title' => t('Expire !points on this date',userpoints_translation()),
+    '#description' => t('Once points have been obtained by the user they will 
+                         last until this date. This setting overrides the 
+                         "Expire after setting" above'. $warning),
+    '#default_value' => variable_get(USERPOINTS_EXPIREON_DATE, array('day'=> 1,'month'=>1,'year'=>1980)),
+  );
+  $form[$group][USERPOINTS_EXPIRY_DESCRIPTION] = array(
+    '#type' => 'textarea',
+    '#title' => t('Expiration entry description'),
+    '#description' => t('A negating expiration entry is made to expire 
+                         points leaving the original entry intact
+                         (e.g. original points + expiration points = 0).
+                         When the expiration entry is made this description will
+                         be placed on the entry. This is useful so the users will
+                         know what happened to their point balance. In crafting
+                         your message you can use the following variables. 
+                         <br /> %points = The name used in branding 
+                         above (also use %Points and %point)
+                         <br />%event = The original event that granted the points 
+                         <br/> %description = Original description for the point 
+                         <br /> %txn_id Original transaction ID 
+                         <br /> %date = Date of the original entry'),
+    '#default_value' => variable_get(USERPOINTS_EXPIRY_DESCRIPTION,''),
+  );
+
   
   $form['setting'] = module_invoke_all('userpoints', 'setting');
 
@@ -217,39 +280,58 @@ function userpoints_get_current_points($uid = 0) {
 }
 
 /**
- * @param op: operation to be performed.
- *    'points' 
- *      modules should use this to award points
- *    'points before' 
- *      hook that fires before points are added
- *    'points after' 
- *      hook that fires after points have been added
- * @param points: number of points to add (if positive) or subtract (if negative)
- * @param uid: user id of the user to get or lose the points
- * @param event: optional event ID
- * @param description: optional description 
- * @param reference: optional reference information, indexed
+ * @param $op
+ *    An array of keyed variables and parameters  
+ *    'op' => 'points' or 'points approved' (required)
+ *    'points' => # of points (int) (required)
+ *    'uid' => $user->uid 
+ *    'event' => 'comment'
+ *    'cid' => 'category ID' (not implemented)
+ *    'expires' => timestamp or 0, 0 = non-expiring; NULL = site default
+ *    'description' => 'description'
+ *    'reference' => reserved module specific use
  *
  * @return FALSE when no action is take, TRUE when points are credited or debited
  */
-function userpoints_userpointsapi($op, $points = 0, $uid = 0, $event = NULL, $description = NULL, $reference = NULL) {
+function userpoints_userpointsapi($params = array()) {
+
+  //Test for and set defaults
+  if (!$params['uid']) {
+    global $user;
+    $params['uid'] = $user->uid;
+  }
+  if (!$params['event']){
+    $params['event'] = NULL;
+  }
+  if (!$params['description']) {
+    $params['description'] = NULL;
+  }
+  if (!$params['reference']) {
+    $params['reference'] = NULL;
+  }
+
   // anonymous users do not get points, and there have to be points to process
-  if ($uid == 0 || $points == 0) {
+  if ($params['uid'] == 0 || $params['points'] == 0) {
+    drupal_set_message("anonymous or no points");
     return FALSE;
   }
 
   // When called explicitly, we handle only three cases. The rest are hooks
   // that should be defined in other modules.
-  if ($op != 'points' && $op != 'txn approve' && $op != 'points approved') {
+  if ($params['op'] != 'points' 
+      && $params['op'] != 'txn approve' 
+      && $params['op'] != 'points approved'
+     ) {
+    drupal_set_message("op is not correct");
     return FALSE;
   }
 
   // Load the user
-  $user = user_load(array('uid' => $uid));
+  $account = user_load(array('uid' => $params['uid']));
   
   // Call the _userpoints hook, and stop if one of them returns FALSE
   // This will be handy later
-  $rc = module_invoke_all('userpoints', 'points before', $points, $uid, $event);
+  $rc = module_invoke_all('userpoints', 'points before', $params['points'], $params['uid'], $params['event']);
 
   foreach ($rc as $key => $value) {
     if ($value == FALSE) {
@@ -258,7 +340,7 @@ function userpoints_userpointsapi($op, $points = 0, $uid = 0, $event = NULL, $de
     }
   }
   
-  if ($points < 0) {
+  if ($params['points'] < 0) {
     $msg = t('lost');
   }
   else {
@@ -266,17 +348,15 @@ function userpoints_userpointsapi($op, $points = 0, $uid = 0, $event = NULL, $de
   }
 
 
-
-
-
   // If $op is 'points', then the points MAY or MAYBE NOT subject to
   // approval, depending on user settings. If they are, then
-  // write the transaction (with the noderation flag on) and return - which
+  // write the transaction (with the moderation flag on) and return - which
   // will provent the rest of the function from actually assigning the
   // points
-  if ($op == 'points') {
-    $moderation = variable_get(USERPOINTS_POINTS_MODERATION, FALSE);
-    userpoints_transaction($moderation, $points, $uid, $event, $description, $reference);
+  if ($params['op'] == 'points') {
+    drupal_set_message("Op = points.. adding points");
+    $params['moderation'] = variable_get(USERPOINTS_POINTS_MODERATION, FALSE);
+    _userpoints_transaction($params);
 
     // If points are being moderated, then write a message to the user and
     // that's it! 
@@ -284,9 +364,9 @@ function userpoints_userpointsapi($op, $points = 0, $uid = 0, $event = NULL, $de
       // Points are moderated, so we do nothing for now.  
       drupal_set_message(t('User %uname %op %pointsvalue !points, pending administrator approval.',
         array_merge(userpoints_translation(), array(
-          '%uname'  => $user->name,
+          '%uname'  => $account->name,
           '%op'     => $msg,
-          '%pointsvalue' => abs($points),
+          '%pointsvalue' => abs($params['points']),
           '%total'  => $current_points)
            )));
 
@@ -295,8 +375,9 @@ function userpoints_userpointsapi($op, $points = 0, $uid = 0, $event = NULL, $de
   }
 
   // If the points are pre-approved, then just write the trail
-  if ($op == 'points approved') {
-    userpoints_transaction(FALSE, $points, $uid, $event, $description, $reference);
+  if ($params['op'] == 'points approved') {
+    $params['moderation'] = FALSE;
+    _userpoints_transaction($params);
   }
 
 
@@ -307,55 +388,91 @@ function userpoints_userpointsapi($op, $points = 0, $uid = 0, $event = NULL, $de
   // ***********************
 
   // Calculate the current point
-  $current_points = (int)$points + userpoints_get_current_points($uid);
+  $current_points = (int)$params['points'] + userpoints_get_current_points($params['uid']);
 
   // Check if user has earned points
-  if ($points > 0) {
+  if ($params['points'] > 0) {
     // Set the max_points to be the current max points, plus whatever earned in this transaction
-    $max_points = db_result(db_query('SELECT max_points FROM {userpoints} WHERE uid = %d', $uid));
+    $max_points = db_result(db_query('SELECT max_points FROM {userpoints} WHERE uid = %d', $params['uid']));
     $max_points = $current_points + (int)$max_points;
   }
 
   drupal_set_message(t('User %uname %op %pointsvalue !points! Total now is %total points.',
     array_merge(userpoints_translation(), array(
-      '%uname'  => $user->name,
+      '%uname'  => $account->name,
       '%op'     => $msg,
-      '%pointsvalue' => abs($points),
+      '%pointsvalue' => abs($params['points']),
       '%total'  => $current_points)
       )));
 
-  if (_userpoints_user_exists($uid)) {
+  if (_userpoints_user_exists($params['uid'])) {
     db_query("UPDATE {userpoints}
       SET points = %d, max_points = %d, last_update = %d WHERE uid = %d",
       $current_points,
       $max_points,
       time(),
-      $uid);
+      $params['uid']);
   }
   else {
     $result = db_query("INSERT INTO {userpoints}
       VALUES (%d, %d, %d, %d)",
-      $uid,
+      $params['uid'],
       $current_points,
       $max_points,
       time());
   }
-  module_invoke_all('userpoints', 'points after', $points, $uid, $event);
+  module_invoke_all('userpoints', 'points after', $params['points'], $params['uid'], $params['event']);
 
   return TRUE;
 }
 
-function userpoints_transaction($moderation, $points = 0, $uid = 0, $event = NULL, $description = NULL, $reference=NULL) {
+/* Purpose: Determines the correct default expiration date
+ * Returns: timestamp
+*/
+function userpoints_get_default_expiry_date(){
+  $expirydate=userpoints_date_to_timestamp(variable_get(USERPOINTS_EXPIREON_DATE,NULL));
+  if($expirydate < time()) {
+    $expirydate = variable_get(USERPOINTS_EXPIREAFTER_DATE, NULL);
+    if ($expirydate) { 
+       $expirydate = time() + $expirydate; 
+    }
+  }
+  return $expirydate;
+} //userpoints_get_default_expiry_date
+
+
+
+/*
+ * Adds the points to the txn table
+*/
+function _userpoints_transaction($params) {
+
+  if (!$params['moderation']) { $params['moderation'] = 0; }
+  if (!$params['points']) { $params['points'] = 0; }
+  if (!$params['uid']) { $params['uid'] = 0; }
+    //The following below could be deleted as NULL is the default
+  if (!$params['event']) { $params['event'] = NULL; }
+  if (!$params['description']) { $params['description'] = NULL; }
+  if (!$params['reference']) { $params['reference'] = NULL; }
+  if (!$params['expirydate']) { $params['expirydate'] = NULL; }
+  if (!$params['expired']) { $params['expired'] = NULL; }
+  if (!$params['parent_txn_id']) { $params['parent_txn_id'] = NULL; }
 
   db_query("INSERT INTO {userpoints_txn}
-    VALUES (0, %d, 0, %d, %d, %d, '%s', '%s', '%s')",
-    $uid,
-    $points,
+    (uid, points, time_stamp, status, event, description, 
+    reference, expirydate, expired, parent_txn_id)
+    VALUES (%d, %d, %d, %d, '%s', '%s', '%s', %d, %d, %d)",
+    $params['uid'],
+    $params['points'],
     time(),
-    $moderation,
-    $event,
-    $description,
-    $reference);
+    $params['moderation'],
+    $params['event'],
+    $params['description'],
+    $params['reference'],
+    $params['expirydate'],
+    $params['expired'], 
+    $params['parent_txn_id']
+    );
   return $moderation;
 }
 
@@ -433,7 +550,15 @@ function userpoints_admin_approve() {
         $data = db_fetch_object($result);
         drupal_set_message(t('Transaction approved'));
         // This transaction has not been credited to the user's account, so credit it first
-        userpoints_userpointsapi('txn approve', $data->points, $data->uid, $data->event, $data->description, $data->reference);
+        $params = array(
+                    'op' => 'txn approve',
+                    'points' => $data->points,
+                    'uid' => $data->uid,
+                    'event' => $data->event,
+                    'description' => $data->description,
+                    'reference' => $data->reference
+                  );
+        userpoints_userpointsapi($params);
         // Set it to approved
         db_query("UPDATE {userpoints_txn}
           SET status = %d, approver_uid = %d WHERE txn_id = %d",
@@ -498,6 +623,15 @@ function userpoints_admin_txn() {
     '#maxlength'     => 30,
     '#description'   => t('Date and time of this transaction, in the form YYYY-MM-DD HH:MM +ZZZZ'),
     );  
+  $form['expirydate'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Expiration date'),
+    '#default_value' => userpoints_get_default_expiry_date(),
+    '#size'          => 30,
+    '#maxlength'     => 30,
+    '#description'   => t('Date and time to expire these points, in the form YYYY-MM-DD HH:MM +ZZZZ').
+                        '<br>'. t('Leave blank for non-expiring points'),
+  );
 
   $form['description'] = array(
     '#type'          => 'textarea',
@@ -595,12 +729,24 @@ function userpoints_admin_txn_submit($form_id, $form = NULL) {
   $txn_user = user_load(array('name' => $form['txn_user']));
   switch ($form['mode']) {
     case 'add':
-      userpoints_userpointsapi('points', $form['points'], $txn_user->uid, 'admin', $form['description'], $form['reference']);
+      $params = array(
+                  'op' => 'points',
+                  'points' => $form['points'],
+                  'uid' => $txn_user->uid,
+                  'event' => 'admin',
+                  'description' => $form['description'],
+                  'reference' => $form['reference'],
+                  'expirydate' => $form['expirydate'],
+                );
+      userpoints_userpointsapi($params);
       break;
       
     case 'edit':
       db_query("UPDATE {userpoints_txn} 
-        SET uid = %d, approver_uid = %d, points = %d, time_stamp = %d, event = '%s', description = '%s', reference = '%s', status = %d WHERE txn_id = %d",
+                SET uid = %d, approver_uid = %d, points = %d, time_stamp = %d, 
+                    event = '%s', description = '%s', reference = '%s', 
+                    status = %d, expirydate = %d
+                WHERE txn_id = %d",
 
 
         $form['uid'],
@@ -611,6 +757,7 @@ function userpoints_admin_txn_submit($form_id, $form = NULL) {
         $form['description'],
         $form['reference'],
         $form['status'],
+        $form['expirydate'],
         $form['txn_id']);
       drupal_set_message(t('Transaction has been updated.'));
   }
@@ -690,4 +837,71 @@ function userpoints_block($op = 'list', $delta = 0, $edit = array()) {
         return $block;
       }
   }
+}
+/*
+ * returns an array of possible expiry time
+ * to the administrative settings page
+*/
+function expiry_dates() {
+  return array(
+  NULL     => 'Never',
+  3600     => 'One hour',
+  86400    => 'One Day',
+  604800   => 'One Week',
+  1209600  => 'Two Weeks',
+  2419200  => 'Four Weeks',
+  31536000 => '365 Days',
+  );
+} //expiry_dates 
+
+/* userpoints_date_to_timestamp
+ * Purpose: modifies FAPI date setting to timestamp 
+ * Returns UNIX timestamp
+*/
+function userpoints_date_to_timestamp($date) {
+  //This takes the FAPI date form array and returns a timestamp
+  if ($date) {
+    return mktime(0,0,0,$date['month'],$date['day'],$date['year']);
+  }
+}
+
+/*
+* Purpose: Finds all transactions with a expirydate < time() and posts 
+*          opposite transactions (sum of 0)
+*/
+function userpoints_expire_transactions(){
+  $sql = "SELECT txn_id, uid, points, time_stamp, event, description 
+          FROM {userpoints_txn} 
+          WHERE status = 0 AND expired = 0 
+          AND (reversedate < %d AND expirydate != 0)"; 
+  $results = db_query($sql, now());
+  while($line = db_fetch_array($results)){
+    $line['time_stamp'] = format_date($line['time_stamp'], 'custom', 'Y-m-d H:i'); 
+    $description = t(variable_get(USERPOINTS_REVERSE_DESCRIPTION,NULL), 
+                     array_merge(userpoints_translation(), 
+                                 array('%event'=>$line['event'], 
+                                       '%description'=> $line['description'], 
+                                       '%txn_id' => $line['txn_id'], 
+                                       '%date' => $line['time_stamp']
+                                       )
+                                 )
+                     ); //$description
+
+    $params = array(
+                'op' => 'points',
+                'points' => -$line['points'],
+                'uid' => $line['uid'],
+                'event' => 'expiry',
+                'description' => $description,
+                'parent_txn_id' => $line['txn_id'],
+              );
+    userpoints_userpointsapi($params);
+    //Ok we've reversed the entry lets update the original entry to set the reversed flag
+    $update_sql = 'UPDATE {userpoints_txn} SET expired=1 WHERE txn_id = %d';
+    db_query($update_sql, $line['txn_id']); 
+  }
+} //userpoints_expire_transactions
+
+function userpoints_cron(){
+  userpoints_expire_transactions();
 }
