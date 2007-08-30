@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.44.2.14.2.3 2007-08-30 00:12:28 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.4 2007-08-30 00:37:27 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -71,7 +71,7 @@ function userpoints_help($section) {
 function userpoints_menu($may_cache) {
   $items = array();
 
-  if ($may_cache) {
+  if (!$may_cache) {
     $items[] = array(
       'path'     => 'userpoints',
       'callback' => 'userpoints_list_users',
@@ -93,17 +93,27 @@ function userpoints_menu($may_cache) {
 
     $items[] = array(
       'path'     => 'admin/user/userpoints',
-      'callback' => 'userpoints_admin_manage',
+      'callback' => 'userpoints_list_users',
       'title'    => t('!Points', userpoints_translation()),
       'description' => t('Manage !points', userpoints_translation()),
       'access'   => user_access(USERPOINTS_PERM_ADMIN),
     );
     $items[] = array(
-      'path'     => 'admin/user/userpoints/manage',
-      'callback' => 'userpoints_admin_manage',
-      'title'    => t('Manage'),
-      'access'   => user_access(USERPOINTS_PERM_ADMIN),
+      'path'     => 'admin/user/userpoints/list',
+      'callback' => 'userpoints_list_users',
+      'title'    => t('List'),
+      'description' => t('List users by !points', userpoints_translation()),
+      'access'   => user_access(USERPOINTS_PERM_VIEW),
       'type'     => MENU_DEFAULT_LOCAL_TASK,
+      'weight'   => -2,
+    );
+    $items[] = array(
+      'path'     => 'admin/user/userpoints/moderate',
+      'callback' => 'userpoints_admin_manage',
+      'title'    => t('Moderation'),
+      'description' => t('Review !points in moderation', userpoints_translation()),
+      'access'   => user_access(USERPOINTS_PERM_ADMIN),
+      'type'     => MENU_LOCAL_TASK,
       'weight'   => -1,
     );
     $items[] = array(
@@ -114,6 +124,7 @@ function userpoints_menu($may_cache) {
       'description' => t('Admin add/delete userpoints'),
       'access'   => user_access(USERPOINTS_PERM_ADMIN),
       'type'     => MENU_LOCAL_TASK,
+      'weight'   => 0,
       );
     
     $items[] = array(
@@ -526,6 +537,12 @@ function userpoints_admin_manage() {
              ),
       );
     }
+  if (!$rows) {
+    //no points in moderation
+    $rows[] = array(array('data' => t('No !points awaiting moderation', userpoints_translation()), 
+                          'colspan' => 5, 'align' => 'center')
+                    ); //$rows[]
+  }
 
   $output = theme('table', $header, $rows);
   $output .= theme('pager', NULL, 30, 0);
