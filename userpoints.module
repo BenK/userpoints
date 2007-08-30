@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.44.2.14.2.2 2007-08-29 23:27:12 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.3 2007-08-30 00:12:28 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -312,7 +312,6 @@ function userpoints_userpointsapi($params = array()) {
 
   // anonymous users do not get points, and there have to be points to process
   if ($params['uid'] == 0 || $params['points'] == 0) {
-    drupal_set_message("anonymous or no points");
     return FALSE;
   }
 
@@ -322,7 +321,6 @@ function userpoints_userpointsapi($params = array()) {
       && $params['op'] != 'txn approve' 
       && $params['op'] != 'points approved'
      ) {
-    drupal_set_message("op is not correct");
     return FALSE;
   }
 
@@ -354,7 +352,6 @@ function userpoints_userpointsapi($params = array()) {
   // will provent the rest of the function from actually assigning the
   // points
   if ($params['op'] == 'points') {
-    drupal_set_message("Op = points.. adding points");
     $params['moderation'] = variable_get(USERPOINTS_POINTS_MODERATION, FALSE);
     _userpoints_transaction($params);
 
@@ -584,9 +581,6 @@ function userpoints_admin_txn() {
 
   $mode = arg(3);
   $txn_id = (int)arg(4);
-  if ($txn_id) {
-    $txn_user = user_load(array('uid' => $txn_id));
-  }
   
   $timestamp = format_date(time(), 'custom', 'Y-m-d H:i O');
 
@@ -594,6 +588,7 @@ function userpoints_admin_txn() {
     $result = db_query('SELECT * FROM {userpoints_txn} WHERE txn_id = %d', $txn_id);
     $txn = db_fetch_object($result);
     $timestamp = format_date($txn->time_stamp, 'custom', 'Y-m-d H:i O');
+    $txn_user = user_load(array('uid' => $txn->uid));
   }
 
   $form['txn_user'] = array(
@@ -603,7 +598,7 @@ function userpoints_admin_txn() {
     '#maxlength'     => 60,
     '#default_value' => $txn_user->name,
     '#autocomplete_path' => 'user/autocomplete',
-    '#description'   => t('Drupal User ID for the user you want the points to affect'),
+    '#description'   => t('Drupal User Name for the user you want the points to affect'),
     );
 
   $form['points'] = array(
@@ -623,10 +618,14 @@ function userpoints_admin_txn() {
     '#maxlength'     => 30,
     '#description'   => t('Date and time of this transaction, in the form YYYY-MM-DD HH:MM +ZZZZ'),
     );  
+  $expirydate = userpoints_get_default_expiry_date();
+  if ($expirydate) {
+    $expirydate = format_date($expirydate, 'custom', 'Y-m-d H:i O');
+  }
   $form['expirydate'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Expiration date'),
-    '#default_value' => userpoints_get_default_expiry_date(),
+    '#default_value' => $expirydate,
     '#size'          => 30,
     '#maxlength'     => 30,
     '#description'   => t('Date and time to expire these points, in the form YYYY-MM-DD HH:MM +ZZZZ').
@@ -675,11 +674,18 @@ function userpoints_admin_txn() {
       break;
 
    case 'edit':
-     $form['txn_user'] = array(
-       '#type'  => 'hidden',
-       '#value' => $txn_user,
-       );
+     
+     $form['txn_user']['#disabled'] = true;
+     unset($form['txn_user']['#autocomplete_path']);
 
+     $form['txn_uid'] = array(
+       '#type'  => 'value',
+       '#value' => $txn->uid,
+       );
+     $form['txn_id'] = array(
+       '#type'  => 'value',
+       '#value' => $txn_id,
+       );
      $form['approver_uid'] = array(
        '#type'  => 'textfield',
        '#description' => t('Approver ID'),
@@ -736,7 +742,7 @@ function userpoints_admin_txn_submit($form_id, $form = NULL) {
                   'event' => 'admin',
                   'description' => $form['description'],
                   'reference' => $form['reference'],
-                  'expirydate' => $form['expirydate'],
+                  'expirydate' => strtotime($form['expirydate']),
                 );
       userpoints_userpointsapi($params);
       break;
@@ -747,9 +753,7 @@ function userpoints_admin_txn_submit($form_id, $form = NULL) {
                     event = '%s', description = '%s', reference = '%s', 
                     status = %d, expirydate = %d
                 WHERE txn_id = %d",
-
-
-        $form['uid'],
+        $form['txn_uid'],
         $form['approver_uid'],
         $form['points'],
         strtotime($form['time_stamp']),
@@ -757,9 +761,10 @@ function userpoints_admin_txn_submit($form_id, $form = NULL) {
         $form['description'],
         $form['reference'],
         $form['status'],
-        $form['expirydate'],
-        $form['txn_id']);
-      drupal_set_message(t('Transaction has been updated.'));
+        strtotime($form['expirydate']),
+        $form['txn_id']
+      ); //db_query
+      drupal_set_message("--".$form['txn_id']. t('Transaction has been updated.'));
   }
   
   drupal_goto('admin/user/userpoints');
@@ -873,11 +878,11 @@ function userpoints_expire_transactions(){
   $sql = "SELECT txn_id, uid, points, time_stamp, event, description 
           FROM {userpoints_txn} 
           WHERE status = 0 AND expired = 0 
-          AND (reversedate < %d AND expirydate != 0)"; 
-  $results = db_query($sql, now());
+          AND (expirydate < %d AND expirydate != 0)"; 
+  $results = db_query($sql, time());
   while($line = db_fetch_array($results)){
     $line['time_stamp'] = format_date($line['time_stamp'], 'custom', 'Y-m-d H:i'); 
-    $description = t(variable_get(USERPOINTS_REVERSE_DESCRIPTION,NULL), 
+    $description = t(variable_get(USERPOINTS_EXPIRY_DESCRIPTION,NULL), 
                      array_merge(userpoints_translation(), 
                                  array('%event'=>$line['event'], 
                                        '%description'=> $line['description'], 
@@ -896,7 +901,7 @@ function userpoints_expire_transactions(){
                 'parent_txn_id' => $line['txn_id'],
               );
     userpoints_userpointsapi($params);
-    //Ok we've reversed the entry lets update the original entry to set the reversed flag
+    //Ok we've expirer the entry lets update the original entry to set the expired flag
     $update_sql = 'UPDATE {userpoints_txn} SET expired=1 WHERE txn_id = %d';
     db_query($update_sql, $line['txn_id']); 
   }
