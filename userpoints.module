@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.44.2.14.2.4 2007-08-30 00:37:27 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.5 2007-08-30 00:51:06 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -298,7 +298,7 @@ function userpoints_get_current_points($uid = 0) {
  *    'uid' => $user->uid 
  *    'event' => 'comment'
  *    'cid' => 'category ID' (not implemented)
- *    'expires' => timestamp or 0, 0 = non-expiring; NULL = site default
+ *    'expirydate' => timestamp or 0, 0 = non-expiring; NULL = site default
  *    'description' => 'description'
  *    'reference' => reserved module specific use
  *
