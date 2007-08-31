@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.44.2.14.2.5 2007-08-30 00:51:06 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.6 2007-08-31 01:14:16 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -901,10 +901,10 @@ function userpoints_expire_transactions(){
     $line['time_stamp'] = format_date($line['time_stamp'], 'custom', 'Y-m-d H:i'); 
     $description = t(variable_get(USERPOINTS_EXPIRY_DESCRIPTION,NULL), 
                      array_merge(userpoints_translation(), 
-                                 array('%event'=>$line['event'], 
-                                       '%description'=> $line['description'], 
-                                       '%txn_id' => $line['txn_id'], 
-                                       '%date' => $line['time_stamp']
+                                 array('!event'=>$line['event'], 
+                                       '!description'=> $line['description'], 
+                                       '!txn_id' => $line['txn_id'], 
+                                       '!date' => $line['time_stamp']
                                        )
                                  )
                      ); //$description
