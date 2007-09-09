@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.44.2.14.2.6 2007-08-31 01:14:16 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.7 2007-09-09 20:28:24 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -165,6 +165,7 @@ function userpoints_perm() {
  * menu callback for settings form.
  */
 function userpoints_admin_settings() {
+  $form = array();
   $form['status'] = array(
     '#type' => 'fieldset',
     '#title' => t('Moderation'),
@@ -286,15 +287,19 @@ function userpoints_admin_settings() {
  *
  * @return number of current points in that user's account
  */
-function userpoints_get_current_points($uid = 0) {
+function userpoints_get_current_points($uid = NULL) {
+  if(!$uid) { 
+    global $user;
+    $uid = $user->uid;
+  }
   return (int)db_result(db_query('SELECT points FROM {userpoints} WHERE uid = %d', $uid));
 }
 
 /**
  * @param $op
  *    An array of keyed variables and parameters  
- *    'op' => 'points' or 'points approved' (required)
  *    'points' => # of points (int) (required)
+ *    'moderate' => TRUE/FALSE 
  *    'uid' => $user->uid 
  *    'event' => 'comment'
  *    'cid' => 'category ID' (not implemented)
@@ -320,18 +325,12 @@ function userpoints_userpointsapi($params = array()) {
   if (!$params['reference']) {
     $params['reference'] = NULL;
   }
+  if (!$params['moderation']) {
+    $params['moderation'] = variable_get(USERPOINTS_POINTS_MODERATION, FALSE);
+  }
 
   // anonymous users do not get points, and there have to be points to process
   if ($params['uid'] == 0 || $params['points'] == 0) {
-    return FALSE;
-  }
-
-  // When called explicitly, we handle only three cases. The rest are hooks
-  // that should be defined in other modules.
-  if ($params['op'] != 'points' 
-      && $params['op'] != 'txn approve' 
-      && $params['op'] != 'points approved'
-     ) {
     return FALSE;
   }
 
@@ -340,7 +339,7 @@ function userpoints_userpointsapi($params = array()) {
   
   // Call the _userpoints hook, and stop if one of them returns FALSE
   // This will be handy later
-  $rc = module_invoke_all('userpoints', 'points before', $params['points'], $params['uid'], $params['event']);
+  $rc = module_invoke_all('userpoints', 'points before', $params['points'], $account->uid, $params['event']);
 
   foreach ($rc as $key => $value) {
     if ($value == FALSE) {
@@ -357,29 +356,17 @@ function userpoints_userpointsapi($params = array()) {
   }
 
 
-  // If $op is 'points', then the points MAY or MAYBE NOT subject to
-  // approval, depending on user settings. If they are, then
-  // write the transaction (with the moderation flag on) and return - which
-  // will provent the rest of the function from actually assigning the
-  // points
-  if ($params['op'] == 'points') {
-    $params['moderation'] = variable_get(USERPOINTS_POINTS_MODERATION, FALSE);
-    _userpoints_transaction($params);
+  _userpoints_transaction($params);
 
-    // If points are being moderated, then write a message to the user and
-    // that's it! 
-    if ($moderation) {
-      // Points are moderated, so we do nothing for now.  
-      drupal_set_message(t('User %uname %op %pointsvalue !points, pending administrator approval.',
-        array_merge(userpoints_translation(), array(
-          '%uname'  => $account->name,
-          '%op'     => $msg,
-          '%pointsvalue' => abs($params['points']),
-          '%total'  => $current_points)
-           )));
-
-      return TRUE;
-    }
+  if ($moderation) {
+    drupal_set_message(t('User %uname %op %pointsvalue !points, pending administrator approval.',
+      array_merge(userpoints_translation(), array(
+        '%uname'  => $account->name,
+        '%op'     => $msg,
+        '%pointsvalue' => abs($params['points']),
+        '%total'  => $current_points)
+        )));
+    return TRUE;
   }
 
   // If the points are pre-approved, then just write the trail
@@ -429,7 +416,7 @@ function userpoints_userpointsapi($params = array()) {
       $max_points,
       time());
   }
-  module_invoke_all('userpoints', 'points after', $params['points'], $params['uid'], $params['event']);
+  module_invoke_all('userpoints', 'points after', $params['points'], $account->uid, $params['event']);
 
   return TRUE;
 }
@@ -454,17 +441,16 @@ function userpoints_get_default_expiry_date(){
  * Adds the points to the txn table
 */
 function _userpoints_transaction($params) {
-
-  if (!$params['moderation']) { $params['moderation'] = 0; }
+  global $user;
+  if (!$params['uid']) { $params['uid'] = $user->uid; }
   if (!$params['points']) { $params['points'] = 0; }
-  if (!$params['uid']) { $params['uid'] = 0; }
-    //The following below could be deleted as NULL is the default
-  if (!$params['event']) { $params['event'] = NULL; }
+  if (!$params['moderation']) { $params['moderation'] = 0; }
   if (!$params['description']) { $params['description'] = NULL; }
-  if (!$params['reference']) { $params['reference'] = NULL; }
   if (!$params['expirydate']) { $params['expirydate'] = NULL; }
   if (!$params['expired']) { $params['expired'] = NULL; }
   if (!$params['parent_txn_id']) { $params['parent_txn_id'] = NULL; }
+  if (!$params['event']) { $params['event'] = NULL; }
+  if (!$params['reference']) { $params['reference'] = NULL; }
 
   db_query("INSERT INTO {userpoints_txn}
     (uid, points, time_stamp, status, event, description, 
@@ -918,7 +904,7 @@ function userpoints_expire_transactions(){
                 'parent_txn_id' => $line['txn_id'],
               );
     userpoints_userpointsapi($params);
-    //Ok we've expirer the entry lets update the original entry to set the expired flag
+    //Ok we've expired the entry lets update the original entry to set the expired flag
     $update_sql = 'UPDATE {userpoints_txn} SET expired=1 WHERE txn_id = %d';
     db_query($update_sql, $line['txn_id']); 
   }

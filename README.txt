@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.4.2.1 2007-04-08 00:13:02 kbahey Exp $
+$Id: README.txt,v 1.4.2.1.2.1 2007-09-09 20:28:24 jredding Exp $
 
 Copyright 2005 http://2bits.com
 
@@ -99,27 +99,35 @@ callable and actionable by other modules.
 
 The functions are:
 
-userpoints_userpointsapi('points', $points, $uid, $event, $description)
-  Use this function to award points to a user.
+userpoints_userpointsapi()
 
-  The arguments are:
+  Accepts an integer or an array. 
+  If the parameter is an integer it is assumed to be points 
+  for the currently logged in user (i.e. global $user; $user->uid) 
 
-  $op
-    Must be 'points'.
+  If the parameter is an array can consist of the following options. If an array
+  points is required. 
 
-  $points
-    number of points to add (if positive) or subtract (if negative)
+  $uid = (int) User ID 
+  $points = (int) # of points to award the user (mandatory)
+  $moderation = (boolean) TRUE or FALSE. If NULL site settings are adhered to
+  $description = (string) fulltext Description presented to the user
+  $expirydate = (timestamp) timestamp the date/time when the points will be expired (depends on cron)
+  $event = (string) varchar32 descriptive identifier administrative purposes
+  $reference = (string) varchar32 indexed/searchable field on the DB
 
-  $uid
-    user ID to award points to.
+  Examples
+    userpoints_userpointsapi(5);  would add 5 points to the currently logged in user
 
-  $event
-    an identified of the event the points is being awarded for, this
-    is a short word, and will be recorded in the transaction log.
+  $params = array (
+    'uid' => $user->uid,
+    'points' => 5,
+  );
 
-  $description
-    a description of the event. This is optional and is a more verbose
-    version of the event identifier.
+userpoints_get_current_points($uid = NULL);
+  
+  Returns an integer of the sum of the user's point 
+  
 
 hook_userpoints($op, $points, $uid, $event) 
 
@@ -147,9 +155,6 @@ hook_userpoints($op, $points, $uid, $event)
    The rest of the arguments are the same as the userpoints_userpointsapi()
    function.
  
-$points = userpoints_get_current_points($uid) 
-   You can call this function to know how much points a use has.
-   return value is the number of points.
 
 Bugs/Features/Patches:
 ----------------------
