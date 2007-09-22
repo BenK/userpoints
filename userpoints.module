@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.44.2.14.2.9 2007-09-22 07:34:43 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.10 2007-09-22 07:54:43 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -789,8 +789,8 @@ function userpoints_admin_txn_submit($form_id, $form = NULL) {
 
 function userpoints_list_users() {
   $sql = "SELECT p.uid, u.name, p.points
-    FROM {userpoints} p INNER JOIN {users} u USING (uid)";
-  $sql_cnt = "SELECT COUNT(DISTINCT(uid)) FROM {userpoints}";
+    FROM {userpoints} p INNER JOIN {users} u USING (uid) ";
+  $sql_cnt = "SELECT COUNT(DISTINCT(uid)) FROM {userpoints} ";
   $header = array(
     array('data' => t('User'), 'field' => 'u.name'),
     array('data' => t('!Points', userpoints_translation()), 'field' => 'p.points', 'sort' => 'desc'),

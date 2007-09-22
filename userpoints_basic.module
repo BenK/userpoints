@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints_basic.module,v 1.3.2.5 2007-08-28 10:13:45 kbahey Exp $
+//$Id: userpoints_basic.module,v 1.3.2.5.2.1 2007-09-22 07:54:43 jredding Exp $
 
 // Copyright 2005 Khalid Baheyeldin http://2bits.com
 
@@ -64,12 +64,21 @@ function userpoints_nodeapi(&$node, $op, $teaser, $page) {
   $points = variable_get(USERPOINTS_POST . $node->type, 0);
   switch($op) {
     case 'insert':
-      $points = $points;
-      userpoints_userpointsapi('points',$points, $node->uid, $node->type);
+      $params = array(
+        'points' => $points,
+        'uid' => $node->uid,
+        'event' => $node->type,
+      );
+      userpoints_userpointsapi($params);
       break;
     case 'delete':
       $points = -$points;
-      userpoints_userpointsapi('points',$points, $node->uid, $node->type);
+      $params = array(
+        'points' => $points,
+        'uid' => $node->uid,
+        'event' => $node->type,
+      );
+      userpoints_userpointsapi($params);
       break;
     case 'prepare':
       $orig_uid = $node->uid;
@@ -77,12 +86,21 @@ function userpoints_nodeapi(&$node, $op, $teaser, $page) {
     case 'update':
       if ($node->uid != $orig_uid) {
         // Add to the new node owner
-        userpoints_userpointsapi('points',$points, $node->uid, $node->type);
+        $params = array(
+          'points' => $points,
+          'uid' => $node->uid,
+          'event' => $node->type,
+        );
+        userpoints_userpointsapi($params);
 
         // subtract from the original node owner
         $points = -$points;
-        userpoints_userpointsapi('points',$points, $orig_uid, $node->type);
-
+        $params = array(
+          'points' => $points,
+          'uid' => $orig_uid,
+          'event' => $node->type,
+        );
+        userpoints_userpointsapi($params);
       }
       break;
   }
@@ -95,15 +113,30 @@ function userpoints_comment($comment, $op) {
   $points = variable_get(USERPOINTS_POST_COMMENT, 0);
   switch($op) {
     case 'insert':
-      userpoints_userpointsapi('points', $points, $user->uid, 'post comment');
+      $params = array(
+        'points' => $points,
+        'uid' => $user->uid,
+        'event' => 'post comment',
+      );
+      userpoints_userpointsapi($params);
       break;
     case 'delete':
       $points = -$points;
-      userpoints_userpointsapi('points', $points, $comment->uid, 'post comment');
+      $params = array(
+        'points' => $points,
+        'uid' => $comment->uid,
+        'event' => 'post comment',
+      );
+      userpoints_userpointsapi($params);
       break;
     case 'moderate':
       $points = variable_get(USERPOINTS_MODERATE_COMMENT, 0);
-      userpoints_userpointsapi('points', $points, $comment->uid, 'moderate comment');
+      $params = array(
+        'points' => $points,
+        'uid' => $comment->uid,
+        'event' => 'moderate comment',
+      );
+      userpoints_userpointsapi($params);
       break;
     case 'form':
       $orig_uid = $comment['uid']['#value'];
