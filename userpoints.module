@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.44.2.14.2.10 2007-09-22 07:54:43 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.11 2007-09-22 09:11:40 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -20,12 +20,15 @@ define('USERPOINTS_TXN_STATUS_APPROVED',  0);
 define('USERPOINTS_TXN_STATUS_PENDING',   1);
 define('USERPOINTS_TXN_STATUS_DECLINED',  2);
 
-define('USERPOINTS_PAGE_COUNT',           30);
 
 define('USERPOINTS_EXPIRY_DESCRIPTION', 'userpoints_expiry_description');
 define('USERPOINTS_EXPIREON_DATE', 'userpoints_expireon_date');
 define('USERPOINTS_EXPIREAFTER_DATE', 'userpoints_expireafter_date');
 define('USERPOINTS_DISPLAY_MESSAGE', 'userpoints_display_message');
+
+define('USERPOINTS_REPORT_USERCOUNT',           30);
+define('USERPOINTS_REPORT_LIMIT', 'userpoints_report_limit');
+define('USERPOINTS_REPORT_DISPLAYZERO', 'userpoints_report_displayzero');
 
 
 /**
@@ -139,6 +142,13 @@ function userpoints_menu($may_cache) {
       'callback' => 'userpoints_admin_approve',
       'access'   => user_access(USERPOINTS_PERM_ADMIN),
       'type'     => MENU_CALLBACK,
+    );
+    $items[] = array(
+      'path' => 'myuserpoints',
+      'title' => t('My') . ' ' . t('!Points', userpoints_translation()),
+      'callback' => 'userpoints_my_userpoints',
+      'access' => user_access('use userpoints'),
+      'type' => MENU_NORMAL_ITEM
     );
   
   }
@@ -285,6 +295,36 @@ function userpoints_admin_settings() {
     '#options'       => array(t('No'), t('Yes')),
     '#description'   => t('Determines if a message should be displayed whenever !points are awarded/substracted ', userpoints_translation()),
   );
+  $group = "reports";
+  $form[$group] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('Report Settings'),
+    '#description' =>t(''),
+  );
+
+  $form[$group][USERPOINTS_REPORT_LIMIT] = array(
+    '#type'          => 'select',
+    '#title'         => t('Transactions per page'),
+    '#default_value' => variable_get(USERPOINTS_REPORT_LIMIT, 10),
+    '#options'       => array(10=>10, 20=>20, 30=>30, 40=>40, 50=>50, 100=>100),
+    '#description'   => t('Limits the number of transactions displayed per page'), 
+  );
+  $form[$group][USERPOINTS_REPORT_DISPLAYZERO] = array(
+    '#type'          => 'radios',
+    '#title'         => t('Display zero !point users?', userpoints_translation()),
+    '#default_value' => variable_get(USERPOINTS_REPORT_DISPLAYZERO, 1),
+    '#options'       => array(t('No'), t('Yes')),
+    '#description'   => t('If set to "No" users with zero !points will not be displayed in the reports ', userpoints_translation()),
+  );
+  $form[$group][USERPOINTS_REPORT_USERCOUNT] = array(
+    '#type'          => 'select',
+    '#title'         => t('Users per page'),
+    '#default_value' => variable_get(USERPOINTS_REPORT_USERCOUNT, 30),
+    '#options'       => array(10=>10, 20=>20, 30=>30, 40=>40, 50=>50, 100=>100),
+    '#description'   => t('When listing !points by user limit how many users are displayed on a single page', userpoints_translation()), 
+  );
   
   $form['setting'] = module_invoke_all('userpoints', 'setting');
 
@@ -305,8 +345,9 @@ function userpoints_get_current_points($uid = NULL) {
 }
 
 /**
- * @param $op
- *    An array of keyed variables and parameters  
+ * @param $params(array) or (int)
+ *    if (int) assumed to be points for current user
+ *    Accpets an array of keyed variables and parameters  
  *    'points' => # of points (int) (required)
  *    'moderate' => TRUE/FALSE 
  *    'uid' => $user->uid 
@@ -523,7 +564,8 @@ function userpoints_admin_manage() {
   $sql = "SELECT t.txn_id, t.uid, t.time_stamp, t.points, t.event, t.status FROM {userpoints_txn} t WHERE t.status = %d";
 
   $sql .= tablesort_sql($header);
-  $result = pager_query($sql, USERPOINTS_PAGE_COUNT, 0, NULL, USERPOINTS_TXN_STATUS_PENDING);
+  $pager_limit = variable_get(USERPOINTS_REPORT_USERCOUNT, 30);
+  $result = pager_query($sql, $pager_limit, 0, NULL, USERPOINTS_TXN_STATUS_PENDING);
     while ($data = db_fetch_object($result)) {
       $user = user_load(array('uid' => $data->uid));
       $rows[] = array(
@@ -545,7 +587,7 @@ function userpoints_admin_manage() {
   }
 
   $output = theme('table', $header, $rows);
-  $output .= theme('pager', NULL, 30, 0);
+  $output .= theme('pager', NULL, $pager_limit, 0);
 
   return $output;
 }
@@ -565,12 +607,12 @@ function userpoints_admin_approve() {
         drupal_set_message(t('Transaction approved'));
         // This transaction has not been credited to the user's account, so credit it first
         $params = array(
-                    'op' => 'txn approve',
                     'points' => $data->points,
                     'uid' => $data->uid,
                     'event' => $data->event,
                     'description' => $data->description,
-                    'reference' => $data->reference
+                    'reference' => $data->reference,
+                    'moderate' => FALSE,
                   );
         userpoints_userpointsapi($params);
         // Set it to approved
@@ -791,21 +833,30 @@ function userpoints_list_users() {
   $sql = "SELECT p.uid, u.name, p.points
     FROM {userpoints} p INNER JOIN {users} u USING (uid) ";
   $sql_cnt = "SELECT COUNT(DISTINCT(uid)) FROM {userpoints} ";
+
+  if (variable_get(USERPOINTS_REPORT_DISPLAYZERO, 1) == 0 ) {
+    //The user would NOT like to see users with zero points
+    $sql .= " WHERE p.points <> 0";
+    $sql_cnt .= " WHERE points <> 0";
+  }
+  $sql .= " GROUP BY p.uid, u.name, p.points";
+
   $header = array(
     array('data' => t('User'), 'field' => 'u.name'),
     array('data' => t('!Points', userpoints_translation()), 'field' => 'p.points', 'sort' => 'desc'),
   );
   $sql .= tablesort_sql($header);
-  $result = pager_query($sql, 30, 0, $sql_cnt);
+  $pager_limit = variable_get(USERPOINTS_REPORT_USERCOUNT, 30);
+  $result = pager_query($sql, $pager_limit, 0, $sql_cnt);
   while ($data = db_fetch_object($result)) {
     $rows[] = array(
-      array('data' => theme('username', $data)),
+      array('data' => theme('username', $data) ."&nbsp;&nbsp;". l("(details)", "myuserpoints/$data->uid")),
       array('data' => $data->points, 'align' => 'right'),
     );
   }
 
   $output = theme('table', $header, $rows);
-  $output .= theme('pager', NULL, 30, 0);
+  $output .= theme('pager', NULL, $pager_limit, 0);
 
   return $output;
 }
@@ -926,4 +977,92 @@ function userpoints_expire_transactions(){
 
 function userpoints_cron(){
   userpoints_expire_transactions();
+}
+
+
+
+function userpoints_my_userpoints() {
+  $overall_total = 0;
+  $unapproved_total = 0;
+  $approved_total = 0;
+
+  global $user;
+  //First which user are we displaying? 
+  $uid = db_escape_string(arg(1));
+  if(!$uid) {
+    $uid = $user->uid;
+  }
+  $point_user = user_load(array('uid'=> $uid));
+  if ($point_user && user_access(USERPOINTS_PERM_VIEW)) { 
+     $title = t('!Points for ',userpoints_translation()). $point_user->name;
+     drupal_set_title($title);
+  } 
+
+  // Look up user's total
+  if (_userpoints_user_exists($uid)) {
+    $approved_total = userpoints_get_current_points($uid);
+    $result = db_query("SELECT SUM(points) FROM {userpoints_txn} WHERE uid = %d AND status = 1", $uid);
+    if (mysql_result($result, 0, 0)) {
+      $unapproved_total = mysql_result($result, 0, 0);
+    }
+    $overall_total = ($approved_total + $unapproved_total);
+  }
+
+  $header = array(
+    array('data' => t('!Points', userpoints_translation()), 'field' => 'points'),
+    array('data' => t('Approved?'), 'field' => 'status'),
+    array('data' => t('Date'), 'field' => 'time_stamp', 'sort' => 'desc'),
+    array('data' => t('Event'), 'field' => 'event'),
+    array('data' => t('Description'), 'field' => 'description'),
+  );
+  $sql  = "SELECT points, time_stamp, event, description, status FROM {userpoints_txn} WHERE uid = %d";
+  $sql .= tablesort_sql($header);
+  $pager_limit = variable_get(USERPOINTS_REPORT_LIMIT, 10);
+  $result = pager_query($sql, $pager_limit, 0, NULL, $uid);
+  if (mysql_num_rows($result) > 0) {
+    while ($row = db_fetch_object($result)) {
+      if ($row->status == 0) {
+        $status = t('Approved');
+      }
+      else {
+        $status = t('Unapproved');
+      }
+      if ($row->description) {
+        $description = $row->description;
+      }
+      else {
+        $description = t('None');
+      }
+      $rows[] = array(
+          array('data' => $row->points, 'align' => 'center'),
+          array('data' => $status, 'align' => 'center'),
+          array('data' => format_date($row->time_stamp, 'small'), 'align' => 'center'),
+          array('data' => $row->event),
+          array('data' => $description),
+      );
+    }
+  }
+  else {
+    $rows[] = array(
+          array('data' => t('No !Points earned', userpoints_translation()), 'colspan' => 5, 'align' => 'center')
+    );
+  }
+
+  $args = array('overall_total' => $overall_total,
+    'unapproved_total' => $unapproved_total,
+    'approved_total' => $approved_total
+  );
+
+  return theme('userpoints_my_userpoints', $args, $header, $rows);
+}
+
+function theme_userpoints_my_userpoints($args, $header, $rows) {
+  $pager_limit = variable_get(USERPOINTS_REPORT_LIMIT, 10);
+  $output  = theme('table', $header, $rows);
+  $output .= '<p><strong>' . t('Overall Total !points', userpoints_translation()) . ':</strong> ' . $args['overall_total'] . '<br />';
+  $output .= '<strong>' . t('Unapproved !points', userpoints_translation()) . ':</strong> ' . $args['unapproved_total'] . '</p>';
+  $output .= '<p><strong>' . t('Net !points Balance', userpoints_translation()) . ':</strong> ' . $args['approved_total'] . '</p>';
+  $output .= theme('pager', NULL, $pager_limit, 0);
+
+  return $output;
 }
