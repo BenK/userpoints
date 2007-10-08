@@ -1,5 +1,5 @@
 <?php
-// $Id: userpoints.install,v 1.2.2.7.2.1 2007-08-28 17:23:57 jredding Exp $
+// $Id: userpoints.install,v 1.2.2.7.2.2 2007-10-08 13:41:38 jredding Exp $
 
 /**
  * Install the initial schema.
@@ -135,7 +135,11 @@ function userpoints_update_6() {
       $ret[] = update_sql("ALTER TABLE {userpoints_txn} 
                          ADD expirydate INT(11) NOT NULL AFTER reference,
                          ADD expired TINYINT(1) NOT NULL AFTER expirydate,
-                         ADD parent_txn_id INT NOT NULL AFTER expired
+                         ADD parent_txn_id INT NOT NULL AFTER expired,
+                         ADD tid INT NULL AFTER parent_txn_id
+                          ");
+      $ret[] = update_sql("ALTER TABLE {userpoints}
+                          ADD tid INT NULL AFTER last_update
                           ");
       break;
   }

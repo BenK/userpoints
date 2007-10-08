@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints.module,v 1.44.2.14.2.11 2007-09-22 09:11:40 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.12 2007-10-08 13:41:38 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -29,6 +29,10 @@ define('USERPOINTS_DISPLAY_MESSAGE', 'userpoints_display_message');
 define('USERPOINTS_REPORT_USERCOUNT',           30);
 define('USERPOINTS_REPORT_LIMIT', 'userpoints_report_limit');
 define('USERPOINTS_REPORT_DISPLAYZERO', 'userpoints_report_displayzero');
+
+define('USERPOINTS_CATEGORY_DEFAULT', userpoints_category_default);
+define('USERPOINTS_CATEGORY_NAME', 'Userpoints');
+define('USERPOINTS_CATEGORY_DEFAULT_TID', NULL);
 
 
 /**
@@ -326,8 +330,38 @@ function userpoints_admin_settings() {
     '#description'   => t('When listing !points by user limit how many users are displayed on a single page', userpoints_translation()), 
   );
   
-  $form['setting'] = module_invoke_all('userpoints', 'setting');
 
+  /*Categories will only appear if the taxonomy module is enabled as 
+  * the module is required for this functionality but not necessarily
+  * a requirement for the module. 
+  */
+  if (module_exists('taxonomy')) {
+    $group = 'category';
+    $form[$group] = array(
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#title' => t('Points Categorization'),
+    );
+    $vid = userpoints_get_vid();
+    if ($vid) {
+      $tree = taxonomy_get_tree($vid, 0, -1, 1);
+      foreach($tree as $term) {
+        $options[$term->tid] = $term->name;  
+      }
+    }
+    $form[$group]['tid'] = array(
+      '#type' => 'select',
+      '#title' => t('Taxonomy'),
+      '#default_value' => variable_get(USERPOINTS_CATEGORY_DEFAULT_TID, NULL),
+      '#options' =>  $options,
+      '#description' => t('By default all points are assigned to this category. 
+                           You can modify what categories are available by modifying
+                           the Userpoints taxonomy'),
+    );
+  }
+
+  $form['setting'] = module_invoke_all('userpoints', 'setting');
   return system_settings_form($form);
 }  
 
@@ -388,6 +422,10 @@ function userpoints_userpointsapi($params) {
   if (!isset($params['moderation'])) {
     //if not passed then site default is used
     $params['moderation'] = variable_get(USERPOINTS_POINTS_MODERATION, FALSE);
+  }
+  if (!isset($params['tid']) || !is_numeric($params['tid'])) {
+    //if not passed then site default is used
+    $params['tid'] = variable_get(USERPOINTS_CATEGORY_DEFAULT_TID, NULL);
   }
 
   // anonymous users do not get points, and there have to be points to process
@@ -463,7 +501,8 @@ function userpoints_userpointsapi($params) {
         $params['uid'],
         $current_points,
         $max_points,
-        time());
+        time()
+        );
     }
   } //if/else moderation
 
@@ -494,6 +533,7 @@ function userpoints_get_default_expiry_date(){
 
 /*
  * Adds the points to the txn table
+ * PRIVATE FUNCTION user userpoints_userpointsapi to add points programatticaly
 */
 function _userpoints_transaction($params) {
   global $user;
@@ -506,11 +546,12 @@ function _userpoints_transaction($params) {
   if (!$params['parent_txn_id']) { $params['parent_txn_id'] = NULL; }
   if (!$params['event']) { $params['event'] = NULL; }
   if (!$params['reference']) { $params['reference'] = NULL; }
+  if (!$params['tid']) { $params['tid'] = NULL; }
 
   db_query("INSERT INTO {userpoints_txn}
     (uid, points, time_stamp, status, event, description, 
-    reference, expirydate, expired, parent_txn_id)
-    VALUES (%d, %d, %d, %d, '%s', '%s', '%s', %d, %d, %d)",
+    reference, expirydate, expired, parent_txn_id, tid)
+    VALUES (%d, %d, %d, %d, '%s', '%s', '%s', %d, %d, %d, %d)",
     $params['uid'],
     $params['points'],
     time(),
@@ -520,7 +561,8 @@ function _userpoints_transaction($params) {
     $params['reference'],
     $params['expirydate'],
     $params['expired'], 
-    $params['parent_txn_id']
+    $params['parent_txn_id'],
+    $params['tid']
     );
   return $moderation;
 }
@@ -690,6 +732,31 @@ function userpoints_admin_txn() {
     '#description'   => t('Date and time to expire these points, in the form YYYY-MM-DD HH:MM +ZZZZ').
                         '<br>'. t('Leave blank for non-expiring points'),
   );
+  if (module_exists('taxonomy')) {
+    $vid = userpoints_get_vid();
+    if ($vid) {
+      $tree = taxonomy_get_tree($vid, 0, -1, 1);
+      foreach($tree as $term) {
+        $options[$term->tid] = $term->name;  
+      }
+    }
+    $form['tid'] = array(
+      '#type' => 'select',
+      '#title' => t('Category'),
+      '#default_value' => variable_get(USERPOINTS_CATEGORY_DEFAULT_TID, NULL),
+      '#options' =>  $options,
+      '#description' => t('Category to apply these points to'),
+    );
+  }
+
+  $form['reference'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Reference'),
+    '#default_value' => $txn->reference,
+    '#size'          => 30,
+    '#maxlength'     => 128,
+    '#description'   => t('Enter optional reference for this transaction. This field will be indexed and searchable.'),
+    ); 
 
   $form['description'] = array(
     '#type'          => 'textarea',
@@ -700,14 +767,6 @@ function userpoints_admin_txn() {
     '#description'   => t('Enter an optional description for this transaction, such as the reason it is created.'),
     );
 
-  $form['reference'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Reference'),
-    '#default_value' => $txn->reference,
-    '#size'          => 30,
-    '#maxlength'     => 128,
-    '#description'   => t('Enter optional reference for this transaction. This field will be indexed and searchable.'),
-    ); 
 
   switch ($mode) {
     case 'add':
@@ -802,6 +861,7 @@ function userpoints_admin_txn_submit($form_id, $form = NULL) {
                   'description' => $form['description'],
                   'reference' => $form['reference'],
                   'expirydate' => strtotime($form['expirydate']),
+                  'tid' => $form['tid'],
                 );
       userpoints_userpointsapi($params);
       break;
@@ -1054,6 +1114,46 @@ function userpoints_my_userpoints() {
   );
 
   return theme('userpoints_my_userpoints', $args, $header, $rows);
+}
+
+/*
+*  Returns the Vocabulary ID (vid) used by userpoints for categorization
+*  if no vocab exists it will create one
+*/
+function userpoints_get_vid() {
+  //code lovingly inspired by the image.module w/ code by drewish
+  $vid = variable_get(USERPOINTS_CATEGORY_DEFAULT,'');
+  if (empty($vid) || !taxonomy_get_vocabulary($vid)) {
+    $sql = "SELECT vid FROM {vocabulary} WHERE module='userpoints'";
+    $vid = db_result(db_query($sql));
+    if (!$vid) {
+      drupal_set_message("Creating userpoints vocabulary");
+      //No vocabulary exists, we'll create one 
+      $vocab = array(
+        'name' => t(USERPOINTS_CATEGORY_NAME),
+        'description' => t('Automatically created by the userpoints module'),
+        'multiple' => '0',
+        'required' => '0',
+        'hierarchy' => '1',
+        'relations' => '0',
+        'module' => 'userpoints',
+      );
+      taxonomy_save_vocabulary($vocab);
+      $vid = $vocab['vid'];
+    }
+    variable_set(USERPOINTS_CATEGORY_DEFAULT, $vid);
+  }
+  if(!is_numeric($vid)) {
+    watchdog('userpoints',t('userpoints module was unable to select or create a vocabulary. Points will be uncategorized'), WATCHDOG_ERROR);
+  }
+  return $vid;
+}
+
+/*
+* Wrapper function to return the default tid via API call
+*/
+function userpoints_get_default_tid() {
+  variable_get(USERPOINTS_CATEGORY_DEFAULT_TID, NULL);
 }
 
 function theme_userpoints_my_userpoints($args, $header, $rows) {
