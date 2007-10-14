@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.14 2007-10-14 14:35:51 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.15 2007-10-14 14:54:36 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -229,7 +229,7 @@ function userpoints_admin_settings() {
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#title' => t('Points expiration'),
+    '#title' => t('!Points expiration', userpoints_translation()),
     '#description' =>t('These settings affect new points only, they are not retroactive!
                         Point expiration depends upon cron.
                       '),
@@ -347,7 +347,7 @@ function userpoints_admin_settings() {
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
-      '#title' => t('Points Categorization'),
+      '#title' => t('!Points Categorization', userpoints_translation()),
     );
     $form[$group]['tid'] = array(
       '#type' => 'select',
