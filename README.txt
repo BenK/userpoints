@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.4.2.1.2.1 2007-09-09 20:28:24 jredding Exp $
+$Id: README.txt,v 1.4.2.1.2.2 2007-10-14 17:02:14 jredding Exp $
 
 Copyright 2005 http://2bits.com
 
@@ -50,8 +50,6 @@ Initally sponsored by: http://artalyst.com
 
 Extended Version
 ----------------
-A commercial extended version of this module allows users to join new
-roles with more permissions as they gain points.
 
 Contact the author for details.
 
@@ -105,30 +103,35 @@ userpoints_userpointsapi()
   If the parameter is an integer it is assumed to be points 
   for the currently logged in user (i.e. global $user; $user->uid) 
 
-  If the parameter is an array can consist of the following options. If an array
-  points is required. 
-
+  If the parameter is an array the array can contain one or more of the
+  following options. The only required parameters are 'points' or 'txn_id'
+  If a parameter is not set the site settings will used. Setting a parameter 
+  to NULL will cause the entry to be NULL, defaults are only used if the 
+  parameter is not set
+  
   $uid = (int) User ID 
-  $points = (int) # of points to award the user (mandatory)
+  $points = (int) # of points to award the user 
+  $txn_id = (int) Transaction ID of a current points record. If present an UPDATE occurs
   $moderation = (boolean) TRUE or FALSE. If NULL site settings are adhered to
   $description = (string) fulltext Description presented to the user
   $expirydate = (timestamp) timestamp the date/time when the points will be expired (depends on cron)
   $event = (string) varchar32 descriptive identifier administrative purposes
   $reference = (string) varchar32 indexed/searchable field on the DB
+  $tid = (int) Taxonomy ID to place these points into; MUST BE in the userpoints Vocabulary!
 
   Examples
-    userpoints_userpointsapi(5);  would add 5 points to the currently logged in user
+    //Add 5 points to the currently logged in user
+    userpoints_userpointsapi(5);  
 
-  $params = array (
-    'uid' => $user->uid,
-    'points' => 5,
-  );
+    //Also add 5 points to the currently logged in user
+    $params = array (
+      'uid' => $user->uid,
+      'points' => 5,
+    );
+    userpoints_userpointsapi($params); 
 
-userpoints_get_current_points($uid = NULL);
   
-  Returns an integer of the sum of the user's point 
-  
-
+//---Hooks
 hook_userpoints($op, $points, $uid, $event) 
 
   Use this hook to act upon certain operations. When other modules award
@@ -155,6 +158,33 @@ hook_userpoints($op, $points, $uid, $event)
    The rest of the arguments are the same as the userpoints_userpointsapi()
    function.
  
+//---Other useful functions
+
+userpoints_get_current_points($uid = NULL, $tid = NULL);
+  Returns an integer of the sum of the user's point 
+  If a tid is passed in that category's sum is returned otherwise
+  the sites default category is used
+
+userpoints_get_vid()
+  Returns an integer of the userpoints Vocabulary
+
+userpoints_get_default_tid()
+  Returns an integer for the userpoints default Taxonomy ID
+  Note: this is the default when submitting points so you 
+        DO NOT need to pass this into userpoints_userpointsapi
+
+userpoints_get_categories()
+  Returns an array of the possible categories including
+  the special "Uncategorized" category (id=0). This is a keyed
+  array that works perfectly with FAPI. If you're creating a 
+  settings page wherein a user would select the category to 
+  place points into, this will give you exactly what you need.
+  See userpoints.module admin_settings function for an example.
+
+userpoints_get_default_expiry_date()
+  Returns a UNIX timestamp of the site's default expiration date.
+  If an expiration date (or interval) it will be return otherwise NULL
+
 
 Bugs/Features/Patches:
 ----------------------

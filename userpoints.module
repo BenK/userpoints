@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.15 2007-10-14 14:54:36 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.16 2007-10-14 17:02:14 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -280,12 +280,12 @@ function userpoints_admin_settings() {
                          be placed on the entry. This is useful so the users will
                          know what happened to their point balance. In crafting
                          your message you can use the following variables. 
-                         <br /> %points = The name used in branding 
-                         above (also use %Points and %point)
-                         <br />%event = The original event that granted the points 
-                         <br/> %description = Original description for the point 
-                         <br /> %txn_id Original transaction ID 
-                         <br /> %date = Date of the original entry'),
+                         <br /> !points = The name used in branding 
+                         above (also use !Points and !point)
+                         <br />!event = The original event that granted the points 
+                         <br/> !description = Original description for the point 
+                         <br /> !txn_id Original transaction ID 
+                         <br /> !date = Date of the original entry'),
     '#default_value' => variable_get(USERPOINTS_EXPIRY_DESCRIPTION,''),
   );
 
