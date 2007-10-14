@@ -1,5 +1,5 @@
 <?php
-// $Id: userpoints.install,v 1.2.2.7.2.3 2007-10-14 14:20:35 jredding Exp $
+// $Id: userpoints.install,v 1.2.2.7.2.4 2007-10-14 18:04:40 jredding Exp $
 
 /**
  * Install the initial schema.
@@ -142,7 +142,7 @@ function userpoints_update_6() {
                           DROP PRIMARY KEY
                           ");
       $ret[] = update_sql("ALTER TABLE {userpoints}
-                          ADD tid INT NULL AFTER last_update
+                          ADD tid INT NULL AFTER last_update,
                           ADD pid INT NOT NULL AUTO_INCREMENT PRIMARY KEY
                           ");
       break;
