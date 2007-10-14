@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.18 2007-10-14 17:54:24 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.19 2007-10-14 17:56:59 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -83,7 +83,7 @@ function userpoints_help($section) {
 function userpoints_menu($may_cache) {
   $items = array();
 
-  if (!$may_cache) {
+  if ($may_cache) {
     $items[] = array(
       'path'     => 'admin/settings/userpoints',
       'callback' => 'drupal_get_form',
@@ -597,7 +597,6 @@ function _userpoints_transaction(&$params) {
 * Update the caching table
 */
 function _userpoints_update_cache(&$params) {
-  drupal_set_message("Updating the cache!");
   if ( $params['status'] != 0 || $params['expired'] == 1) {
       //Only update the cache for fully approved non-expired points 
       return false;
