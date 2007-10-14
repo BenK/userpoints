@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.16 2007-10-14 17:02:14 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.17 2007-10-14 17:33:55 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -597,8 +597,9 @@ function _userpoints_transaction(&$params) {
 * Update the caching table
 */
 function _userpoints_update_cache(&$params) {
-  if ( $params['status'] != 0) {
-      //Only update the cache for fully approved points
+  drupal_set_message("Updating the cache!");
+  if ( $params['status'] != 0 || $params['expired'] == 1) {
+      //Only update the cache for fully approved non-expired points 
       return false;
   }
   if (!isset($params['tid'])) {
@@ -607,8 +608,7 @@ function _userpoints_update_cache(&$params) {
 
   // Calculate the current points based upon the tid
   $current_points = (int)$params['points'] + userpoints_get_current_points($params['uid'], $params['tid']);
-
-  // Check if user has earned points and update their maximum points cache
+  // Check if user has earned points update their maximum points cache
   if ($params['points'] > 0) {
     // Set the max_points to be the current max points, plus whatever earned in this transaction
     $max_points = db_result(
@@ -618,7 +618,7 @@ function _userpoints_update_cache(&$params) {
                               $params['uid'], $params['tid']
                             )
                            );
-    $max_points = (int)$points + (int)$max_points;
+    $max_points = (int)$params['points'] + (int)$max_points;
   }
 
   $mesg = (t('User %uname %op %pointsvalue !points! Total now is %total points.',
@@ -762,7 +762,7 @@ function userpoints_admin_manage() {
   if (!$rows) {
     //no points in moderation
     $rows[] = array(array('data' => t('No !points awaiting moderation', userpoints_translation()), 
-                          'colspan' => 5, 'align' => 'center')
+                          'colspan' => 6, 'align' => 'center')
                     ); //$rows[]
   }
 
@@ -849,10 +849,17 @@ function userpoints_admin_txn() {
     '#maxlength'     => 30,
     '#description'   => t('Date and time of this transaction, in the form YYYY-MM-DD HH:MM +ZZZZ'),
     );  
-  $expirydate = userpoints_get_default_expiry_date();
-  if ($expirydate) {
-    $expirydate = format_date($expirydate, 'custom', 'Y-m-d H:i O');
+
+  if ($txn->txn_id) {
+    $expirydate = format_date($txn->expirydate, 'custom', 'Y-m-d H:i O');
   }
+  else {
+    //If we're not editing we use site defaults
+    $expirydate = userpoints_get_default_expiry_date();
+    if ($expirydate) {
+      $expirydate = format_date($expirydate, 'custom', 'Y-m-d H:i O');
+    }
+  }  
   $form['expirydate'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Expiration date'),
@@ -992,22 +999,22 @@ function userpoints_admin_txn_submit($form_id, $form = NULL) {
       break;
       
     case 'edit':
-      db_query("UPDATE {userpoints_txn} 
-                SET uid = %d, approver_uid = %d, points = %d, time_stamp = %d, 
-                    event = '%s', description = '%s', reference = '%s', 
-                    status = %d, expirydate = %d
-                WHERE txn_id = %d",
-        $form['txn_uid'],
-        $form['approver_uid'],
-        $form['points'],
-        strtotime($form['time_stamp']),
-        $form['event'],
-        $form['description'],
-        $form['reference'],
-        $form['status'],
-        strtotime($form['expirydate']),
-        $form['txn_id']
-      ); //db_query
+      if ($form['expirydate']) {
+        $expirydate = strtotime($form['expirydate']);
+      }
+      $params = array (
+        'uid' => $form['txn_uid'],
+        'approver_id' => $form['approver_uid'],
+        'points' => $form['points'],
+        'time_stamp' => strtotime($form['time_stamp']),
+        'event' => $form['event'],
+        'description' => $form['description'],
+        'reference' => $form['reference'],
+        'status' => $form['status'],
+        'expirydate' => $expirydate,
+        'txn_id' => $form['txn_id']
+      );
+      userpoints_userpointsapi($params);
   }
   
   drupal_goto('admin/user/userpoints');
@@ -1222,8 +1229,11 @@ function userpoints_expire_transactions(){
               );
     userpoints_userpointsapi($params);
     //Ok we've expired the entry lets update the original entry to set the expired flag
-    $update_sql = 'UPDATE {userpoints_txn} SET expired=1 WHERE txn_id = %d';
-    db_query($update_sql, $line['txn_id']); 
+    $params = array(
+      'txn_id' => $line['txn_id'],
+      'expired' => 1,
+    );
+    userpoints_userpointsapi($params);
   }
 } //userpoints_expire_transactions
 
