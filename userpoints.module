@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.19 2007-10-14 17:56:59 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.20 2007-10-14 18:28:30 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -607,16 +607,16 @@ function _userpoints_update_cache(&$params) {
 
   // Calculate the current points based upon the tid
   $current_points = (int)$params['points'] + userpoints_get_current_points($params['uid'], $params['tid']);
-  // Check if user has earned points update their maximum points cache
+  //Grab the user's maximum points to preserve it
+  $max_points = db_result(
+                  db_query('SELECT max_points 
+                            FROM {userpoints} 
+                            WHERE uid = %d AND tid = %d', 
+                            $params['uid'], $params['tid']
+                          )
+                         );
   if ($params['points'] > 0) {
-    // Set the max_points to be the current max points, plus whatever earned in this transaction
-    $max_points = db_result(
-                    db_query('SELECT max_points 
-                              FROM {userpoints} 
-                              WHERE uid = %d AND tid = %d', 
-                              $params['uid'], $params['tid']
-                            )
-                           );
+    //points are greater than zero, update their max_points
     $max_points = (int)$params['points'] + (int)$max_points;
   }
 
