@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.20 2007-10-14 18:28:30 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.21 2007-10-15 02:44:07 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -10,6 +10,7 @@ define('USERPOINTS_PERM_ADMIN',          'admin userpoints');
 define('USERPOINTS_TRANS_UCPOINTS',      'userpoints_trans_ucpoints');
 define('USERPOINTS_TRANS_LCPOINTS',      'userpoints_trans_lcpoints');
 define('USERPOINTS_TRANS_LCPOINT',       'userpoints_trans_lcpoint');
+define('USERPOINTS_TRANS_UNCAT',         'userpoints_trans_uncat');
 
 define('USERPOINTS_STATUS',              'userpoints_status');
 
@@ -33,7 +34,6 @@ define('USERPOINTS_CATEGORY_DEFAULT', userpoints_category_default);
 define('USERPOINTS_CATEGORY_NAME', 'Userpoints');
 //DB records with 0 or NULL as a category(tid) as assumed "Uncategorized"
 define('USERPOINTS_CATEGORY_DEFAULT_TID', NULL);
-define('USERPOINTS_CATEGORY_UNCAT_NAME', 'Uncategorized');
 
 
 /**
@@ -46,7 +46,8 @@ function userpoints_translation() {
     $trans = array(
       '!Points' => variable_get(USERPOINTS_TRANS_UCPOINTS, 'Points'),
       '!points' => variable_get(USERPOINTS_TRANS_LCPOINTS, 'points'),
-      '!point'  => variable_get(USERPOINTS_TRANS_LCPOINT, 'point')
+      '!point'  => variable_get(USERPOINTS_TRANS_LCPOINT, 'point'),
+      '!Uncategorized'  => variable_get(USERPOINTS_TRANS_UNCAT, 'Uncategorized'),
       );
   }
   return $trans;  
@@ -221,6 +222,13 @@ function userpoints_admin_settings() {
   '#type' => 'textfield',
   '#title' => t('Word to use in the interface for the lower case singular word !point', userpoints_translation()),
   '#default_value' => variable_get(USERPOINTS_TRANS_LCPOINT, 'point'),
+  '#size' => 20,
+  '#maxlength' => 20,
+  );
+  $form[$group][USERPOINTS_TRANS_UNCAT] = array(
+  '#type' => 'textfield',
+  '#title' => t('Word to use for the uncategorized category'),
+  '#default_value' => variable_get(USERPOINTS_TRANS_UNCAT, 'Uncategorized'),
   '#size' => 20,
   '#maxlength' => 20,
   );
@@ -725,7 +733,7 @@ function userpoints_admin_manage() {
   //Check for filtering
   if (is_numeric($tid) && $tid == 0) { 
     $sql .= " AND (p.tid IS NULL OR p.tid = '')";
-    $cat = t(USERPOINTS_CATEGORY_UNCAT_NAME);
+    $cat = t('!Uncategorized', userpoints_translation());
   }
   elseif (is_numeric($tid)) {
     $sql .= " AND p.tid = %d";
@@ -744,7 +752,7 @@ function userpoints_admin_manage() {
     while ($data = db_fetch_object($result)) {
       $user = user_load(array('uid' => $data->uid));
       if (!$data->cat) {
-        $data->cat = t(USERPOINTS_CATEGORY_UNCAT_NAME);
+        $data->cat = t('!Uncategorized', userpoints_translation());
       }
       $rows[] = array(
         array('data' => theme('username', $user)),
@@ -1031,7 +1039,7 @@ function userpoints_list_users() {
   //Check for filtering
   if (is_numeric($tid) && $tid == 0) {
     $sql .= "WHERE p.tid IS NULL OR p.tid = ''";
-    $cat = t(USERPOINTS_CATEGORY_UNCAT_NAME); 
+    $cat = t('!Uncategorized', userpoints_translation()); 
   }
   elseif (is_numeric($tid)) {
     $sql .= "WHERE p.tid = %d";
@@ -1064,7 +1072,7 @@ function userpoints_list_users() {
   $result = pager_query($sql, $pager_limit, 0, $sql_cnt, $tid);
   while ($data = db_fetch_object($result)) {
     if (!$data->cat) {
-      $data->cat = t(USERPOINTS_CATEGORY_UNCAT_NAME);
+      $data->cat = t('!Uncategorized', userpoints_translation());
     }
     $rows[] = array(
       array('data' => theme('username', $data) ."&nbsp;&nbsp;". l("(details)", "myuserpoints/$data->uid")),
@@ -1297,7 +1305,7 @@ function userpoints_my_userpoints() {
     while ($row = db_fetch_object($result)) {
       $status = $stati[$row->status];
       if (!$row->cat) { 
-        $row->cat = t(USERPOINTS_CATEGORY_UNCAT_NAME);
+        $row->cat = t('!Uncategorized', userpoints_translation());
       }
       if ($row->description) {
         $description = $row->description;
@@ -1369,7 +1377,7 @@ function userpoints_get_categories() {
   $vid = userpoints_get_vid();
   //Create the "Uncategorized" category
   $options = array();
-  $options[0] = t(USERPOINTS_CATEGORY_UNCAT_NAME);
+  $options[0] = t('Uncategorized', userpoints_translation());
 
   if ($vid) {
     $tree = taxonomy_get_tree($vid, 0, -1, 1);
