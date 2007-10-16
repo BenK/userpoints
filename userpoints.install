@@ -1,5 +1,5 @@
 <?php
-// $Id: userpoints.install,v 1.2.2.7.2.5 2007-10-15 06:42:48 jredding Exp $
+// $Id: userpoints.install,v 1.2.2.7.2.6 2007-10-16 07:14:33 jredding Exp $
 
 /**
  * Install the initial schema.
@@ -14,7 +14,7 @@ function userpoints_install() {
           max_points    INT(10) NOT NULL DEFAULT '0',
           last_update   INT(11) NOT NULL DEFAULT '0',
           tid           INT(11) default NULL,
-          pid           INT(11) NOT auto_increment,
+          pid           INT(11) NOT NULL auto_increment,
           PRIMARY KEY (pid),
           KEY (last_update)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
