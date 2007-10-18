@@ -1,5 +1,5 @@
 <?php
-// $Id: userpoints.install,v 1.2.2.7.2.6 2007-10-16 07:14:33 jredding Exp $
+// $Id: userpoints.install,v 1.2.2.7.2.7 2007-10-18 06:20:13 jredding Exp $
 
 /**
  * Install the initial schema.
@@ -69,6 +69,12 @@ function userpoints_install() {
 * Implementation of hook_uninstall().
 */
 function userpoints_uninstall() {
+
+  $vid = db_result(db_query("SELECT vid FROM {vocabulary} WHERE module='userpoints'"));
+  if ($vid) {
+    taxonomy_del_vocabulary($vid);
+  }
+
   db_query('DROP TABLE {userpoints}');
   db_query('DROP TABLE {userpoints_txn}');
   db_query("DELETE FROM {variable} WHERE name like '%userpoints%'");

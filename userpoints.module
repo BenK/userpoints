@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.21 2007-10-15 02:44:07 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.22 2007-10-18 06:20:13 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -26,14 +26,13 @@ define('USERPOINTS_EXPIREON_DATE', 'userpoints_expireon_date');
 define('USERPOINTS_EXPIREAFTER_DATE', 'userpoints_expireafter_date');
 define('USERPOINTS_DISPLAY_MESSAGE', 'userpoints_display_message');
 
-define('USERPOINTS_REPORT_USERCOUNT',           30);
+define('USERPOINTS_REPORT_USERCOUNT', 'userpoints_report_usercount');
 define('USERPOINTS_REPORT_LIMIT', 'userpoints_report_limit');
 define('USERPOINTS_REPORT_DISPLAYZERO', 'userpoints_report_displayzero');
 
-define('USERPOINTS_CATEGORY_DEFAULT', userpoints_category_default);
 define('USERPOINTS_CATEGORY_NAME', 'Userpoints');
-//DB records with 0 or NULL as a category(tid) as assumed "Uncategorized"
-define('USERPOINTS_CATEGORY_DEFAULT_TID', NULL);
+define('USERPOINTS_CATEGORY_DEFAULT_VID', 'userpoints_category_default_vid');
+define('USERPOINTS_CATEGORY_DEFAULT_TID', 'userpoints_category_default_tid');
 
 
 /**
@@ -357,10 +356,10 @@ function userpoints_admin_settings() {
       '#collapsed' => TRUE,
       '#title' => t('!Points Categorization', userpoints_translation()),
     );
-    $form[$group]['tid'] = array(
+    $form[$group][USERPOINTS_CATEGORY_DEFAULT_TID] = array(
       '#type' => 'select',
       '#title' => t('Default Category'),
-      '#default_value' => variable_get(USERPOINTS_CATEGORY_DEFAULT_TID, 0),
+      '#default_value' => variable_get(USERPOINTS_CATEGORY_DEFAULT_TID, NULL),
       '#options' =>  userpoints_get_categories(),
       '#description' => t('By default all points are assigned to this category. 
                            You can modify what categories are available by modifying
@@ -1343,7 +1342,7 @@ function userpoints_my_userpoints() {
 */
 function userpoints_get_vid() {
   //code lovingly inspired by the image.module w/ code by drewish
-  $vid = variable_get(USERPOINTS_CATEGORY_DEFAULT, '');
+  $vid = variable_get(USERPOINTS_CATEGORY_DEFAULT_VID, '');
   if (empty($vid) || !taxonomy_get_vocabulary($vid)) {
     $sql = "SELECT vid FROM {vocabulary} WHERE module='userpoints'";
     $vid = db_result(db_query($sql));
@@ -1362,7 +1361,7 @@ function userpoints_get_vid() {
       taxonomy_save_vocabulary($vocab);
       $vid = $vocab['vid'];
     }
-    variable_set(USERPOINTS_CATEGORY_DEFAULT, $vid);
+    variable_set(USERPOINTS_CATEGORY_DEFAULT_VID, $vid);
   }
   if (!is_numeric($vid)) {
     watchdog('userpoints', t('userpoints module was unable to select or create a vocabulary. Points will be uncategorized'), WATCHDOG_ERROR);
@@ -1377,7 +1376,7 @@ function userpoints_get_categories() {
   $vid = userpoints_get_vid();
   //Create the "Uncategorized" category
   $options = array();
-  $options[0] = t('Uncategorized', userpoints_translation());
+  $options[0] = t('!Uncategorized', userpoints_translation());
 
   if ($vid) {
     $tree = taxonomy_get_tree($vid, 0, -1, 1);
