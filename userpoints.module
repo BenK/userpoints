@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.22 2007-10-18 06:20:13 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.23 2007-10-23 13:14:39 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -309,7 +309,7 @@ function userpoints_admin_settings() {
     '#type'          => 'radios',
     '#title'         => t('Display message'),
     '#default_value' => variable_get(USERPOINTS_DISPLAY_MESSAGE, 1),
-    '#options'       => array(t('No'), t('Yes')),
+    '#options'       => array(0 => t('No'), 1 => t('Yes')),
     '#description'   => t('Determines if a message should be displayed whenever !points are awarded/substracted ', userpoints_translation()),
   );
   $group = "reports";
@@ -482,8 +482,18 @@ function userpoints_userpointsapi($params) {
         '%uname'  => $account->name,
         '%op'     => $msg,
         '%pointsvalue' => abs($params['points']),
-        '%total'  => $current_points)
-        )));
+        '%total'  => userpoints_get_current_points($params['uid'], $params['tid'])
+        ))));
+  } 
+  else {
+    
+    $mesg = (t('User %uname %op %pointsvalue !points! Total now is %total points.',
+      array_merge(userpoints_translation(), array(
+        '%uname'  => $account->name,
+        '%op'     => $msg,
+        '%pointsvalue' => abs($params['points']),
+        '%total'  => userpoints_get_current_points($params['uid'], $params['tid'])
+        ))));
   } //if moderation
 
   if ($mesg && variable_get(USERPOINTS_DISPLAY_MESSAGE, 1) == 1) {
@@ -626,14 +636,6 @@ function _userpoints_update_cache(&$params) {
     //points are greater than zero, update their max_points
     $max_points = (int)$params['points'] + (int)$max_points;
   }
-
-  $mesg = (t('User %uname %op %pointsvalue !points! Total now is %total points.',
-    array_merge(userpoints_translation(), array(
-      '%uname'  => $account->name,
-      '%op'     => $msg,
-      '%pointsvalue' => abs($params['points']),
-      '%total'  => $current_points)
-      )));
 
   // insert or update the userpoints caching table with the user's current points
   if (_userpoints_user_exists($params['uid'], $params['tid'])) {
