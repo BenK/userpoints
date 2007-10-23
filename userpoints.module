@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.23 2007-10-23 13:14:39 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.24 2007-10-23 15:01:24 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -522,6 +522,10 @@ function _userpoints_transaction(&$params) {
     if (!isset($params['uid'])) {
       global $user;
       $params['uid'] = $user->uid;
+      //there must be a UID, anonymous does not receive points
+      if (!$params['uid'] > 0) {
+        return false;
+      }
     }
     if (!isset($params['moderate'])) {
       //if not passed then site default is used
