@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.27 2007-10-23 16:20:22 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.28 2007-10-23 16:36:34 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1213,8 +1213,6 @@ function userpoints_filter_cat_select($path, $tid) {
 function userpoints_block($op = 'list', $delta = 0, $edit = array()) {
   global $user;
 
-  $num = 5;
-
   switch ($op) {
     case 'list':
       $blocks[-1]['info'] = t('User\'s !points', userpoints_translation());
@@ -1243,6 +1241,7 @@ function userpoints_block($op = 'list', $delta = 0, $edit = array()) {
           //$delta is our tid for pulling the points
           //if 0 we pull 0 or NULL
           $title = t('Highest Users');
+          $num = variable_get('userpoints_block_up_records_'. $delta, 5);
           $sql = 'SELECT p.uid, u.name, p.points
                   FROM {userpoints} p
                   INNER JOIN {users} u USING (uid)';
@@ -1271,8 +1270,23 @@ function userpoints_block($op = 'list', $delta = 0, $edit = array()) {
         $block['content'] = $content;
 
         return $block;
-      }
-  }
+      } //if user_access()
+    case 'configure':
+      $form['up_records'] = array(
+        '#type' => 'select',
+        '#title' => t('Number of users to display'),
+        '#default_value' => variable_get('userpoints_block_up_records_'. $delta, 10),
+        '#options' => array ( 1 => 1, 5 => 5, 10 => 10, 15 => 15, 20 => 20, 30 => 30, 
+                              40 => 40, 50 => 50, 60 => 60, 70 => 70, 
+                              80 => 80, 90 => 90, 100 => 100, 200 => 200),
+        '#description' => t('Limit the number of users displayed to this value'),
+      );
+      return $form;
+      break;
+    case 'save':
+      variable_set('userpoints_block_up_records_'.$delta, $edit['up_records']);
+      break;
+  } //switch $op
 }
 /*
  * returns an array of possible expiry times
