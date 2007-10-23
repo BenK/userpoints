@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.24 2007-10-23 15:01:24 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.25 2007-10-23 16:02:54 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1139,41 +1139,56 @@ function userpoints_block($op = 'list', $delta = 0, $edit = array()) {
 
   switch ($op) {
     case 'list':
-      $blocks[0]['info'] = t('User\'s !points', userpoints_translation());
-      $blocks[1]['info'] = t('Highest Users');
+      $blocks[-1]['info'] = t('User\'s !points', userpoints_translation());
+      //Grab a list of the available terms
+      $terms = userpoints_get_categories();
+      foreach ($terms as $key => $value) {
+       $blocks[$key]['info'] = t("Highest $value !points", userpoints_translation());; 
+      } //foreach
+      
       return $blocks;
 
     case 'view':
       if (user_access(USERPOINTS_PERM_VIEW)) {
-        switch ($delta) {
-          case 0:
-            $title = t('@user\'s !points', array_merge(array('@user' => $user->name), userpoints_translation()));;
-            if ($user->uid) {
-              $points = (int) db_result(db_query('SELECT points FROM {userpoints} WHERE uid = %d', $user->uid));
-              $show_points = format_plural($points, t('!point', userpoints_translation()), t('!points', userpoints_translation()));
-              $content = t('You have %p %c', array('%p' => $points, '%c' => $show_points));
-            }
-            else {
-              $content = t('!Points are visible to logged in users only', userpoints_translation());
-            }
-            break;
-
-          case 1:
-            $title = t('Highest Users');
-            $result = db_query_range('SELECT p.uid, u.name, p.points
-              FROM {userpoints} p INNER JOIN {users} u USING (uid)
-              ORDER BY p.points DESC', 0, $num);
-            while ($data = db_fetch_object($result)) {
-              $rows[] =
-                array(
-                  array('data' => theme('username', $data)),
-                  array('data' => $data->points, 'align' => 'right'));
-            }
-            $header = array(t('User'), t('!Points', userpoints_translation()));
-            $content = theme('table', $header, $rows);
-            $content .= '<div class="more-link">'. l(t('more'), 'userpoints', array('title' => t('All users by !points', userpoints_translation()))) .'</div>';
-            break;
+        drupal_set_message("Delta is $delta");
+        if ($delta == -1) {
+          $title = t('@user\'s !points', array_merge(array('@user' => $user->name), userpoints_translation()));;
+          if ($user->uid) {
+            $points = (int) db_result(db_query('SELECT points FROM {userpoints} WHERE uid = %d', $user->uid));
+            $show_points = format_plural($points, t('!point', userpoints_translation()), t('!points', userpoints_translation()));
+            $content = t('You have %p %c', array('%p' => $points, '%c' => $show_points));
+          }
+          else {
+            $content = t('!Points are visible to logged in users only', userpoints_translation());
+          }
         }
+        else {
+          //$delta is our tid for pulling the points
+          //if 0 we pull 0 or NULL
+          $title = t('Highest Users');
+          $sql = 'SELECT p.uid, u.name, p.points
+                  FROM {userpoints} p
+                  INNER JOIN {users} u USING (uid)';
+          if ( $delta == 0 ) {
+            $sql .= ' WHERE p.tid = 0 OR p.tid IS NULL ';
+            $result = db_query_range($sql, 0, $num);
+          } 
+          else {
+            $delta = 5;
+            $sql .= ' WHERE p.tid = %d';
+            $result = db_query_range($sql, $delta, 0, $num);
+          }
+
+          while ($data = db_fetch_object($result)) {
+            $rows[] =
+              array(
+                array('data' => theme('username', $data)),
+                array('data' => $data->points, 'align' => 'right'));
+            }
+          $header = array(t('User'), t('!Points', userpoints_translation()));
+          $content = theme('table', $header, $rows);
+          $content .= '<div class="more-link">'. l(t('more'), 'userpoints', array('title' => t('All users by !points', userpoints_translation()))) .'</div>';
+        } //if $delta
 
         $block['subject'] = $title;
         $block['content'] = $content;
