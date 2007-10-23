@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.25 2007-10-23 16:02:54 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.26 2007-10-23 16:16:37 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -96,14 +96,14 @@ function userpoints_menu($may_cache) {
 
     $items[] = array(
       'path'     => 'admin/user/userpoints',
-      'callback' => 'userpoints_list_users',
+      'callback' => 'userpoints_admin_points',
       'title'    => t('!Points', userpoints_translation()),
       'description' => t('Manage !points', userpoints_translation()),
       'access'   => user_access(USERPOINTS_PERM_ADMIN),
     );
     $items[] = array(
       'path'     => 'admin/user/userpoints/list',
-      'callback' => 'userpoints_list_users',
+      'callback' => 'userpoints_admin_points',
       'title'    => t('List'),
       'description' => t('List users by !points', userpoints_translation()),
       'access'   => user_access(USERPOINTS_PERM_VIEW),
@@ -152,10 +152,17 @@ function userpoints_menu($may_cache) {
       'type'     => MENU_CALLBACK,
     );
     $items[] = array(
+      'path' => 'userpoints',
+      'title'    => t('users by !points', userpoints_translation()),
+      'callback' => 'userpoints_list_users',
+      'access' => user_access(USERPOINTS_PERM_VIEW),
+      'type' => MENU_NORMAL_ITEM,
+    );
+    $items[] = array(
       'path' => 'myuserpoints',
       'title' => t('My') .' '. t('!Points', userpoints_translation()),
       'callback' => 'userpoints_my_userpoints',
-      'access' => user_access('use userpoints'),
+      'access' => user_access(USERPOINTS_PERM_VIEW),
       'type' => MENU_NORMAL_ITEM
     );
   
@@ -1032,7 +1039,10 @@ function userpoints_admin_txn_submit($form_id, $form = NULL) {
   drupal_goto('admin/user/userpoints');
 }
 
-function userpoints_list_users() {
+/*
+* Provides and administrative Interface for point listing, moderation and adding
+*/
+function userpoints_admin_points() {
   $tid = arg(3);
   $cat_count = count(userpoints_get_categories());
 
@@ -1101,6 +1111,74 @@ function userpoints_list_users() {
   return $output;
 }
 
+function userpoints_list_users() {
+  $tid = arg(1);
+  $cat_count = count(userpoints_get_categories());
+
+  $sql = "SELECT p.uid, u.name, p.points, p.tid, t.name as cat 
+          FROM {userpoints} p INNER JOIN {users} u USING (uid) 
+          LEFT JOIN {term_data} t ON p.tid = t.tid
+          ";
+
+  //Check for filtering
+  if (is_numeric($tid) && $tid == 0) {
+    $sql .= "WHERE p.tid IS NULL OR p.tid = ''";
+    $cat = t('!Uncategorized', userpoints_translation()); 
+  }
+  elseif (is_numeric($tid)) {
+    $sql .= "WHERE p.tid = %d";
+    $cat = db_result(db_query("SELECT name from {term_data} WHERE tid = %d", $tid));
+  }
+  else {
+    $cat = t('All');
+  }
+  drupal_set_title(t($cat) ." ". t("!points", userpoints_translation()));
+
+  $sql_cnt = "SELECT COUNT(DISTINCT(uid)) 
+              FROM {userpoints} 
+              WHERE tid = %d
+              ";
+
+  if (variable_get(USERPOINTS_REPORT_DISPLAYZERO, 1) == 0 ) {
+    //The user would NOT like to see users with zero points
+    $sql .= " AND p.points <> 0";
+    $sql_cnt .= " AND points <> 0";
+  }
+  $sql .= " GROUP BY p.uid, u.name, p.points";
+
+  $header = array(
+    array('data' => t('User'), 'field' => 'u.name'),
+    array('data' => t('Category'), 'field' => 't.name'),
+    array('data' => t('!Points', userpoints_translation()), 'field' => 'p.points', 'sort' => 'desc'),
+  );
+  $sql .= tablesort_sql($header);
+  $pager_limit = variable_get(USERPOINTS_REPORT_USERCOUNT, 30);
+  $result = pager_query($sql, $pager_limit, 0, $sql_cnt, $tid);
+  while ($data = db_fetch_object($result)) {
+    if (!$data->cat) {
+      $data->cat = t('!Uncategorized', userpoints_translation());
+    }
+    $rows[] = array(
+      array('data' => theme('username', $data) ."&nbsp;&nbsp;". l("(details)", "myuserpoints/$data->uid")),
+      array('data' => $data->cat, 'align' => 'right'),
+      array('data' => $data->points, 'align' => 'right'),
+    );
+  }
+
+  //If there is only one category there is no sense in display the category filter dropdown
+  if ($cat_count > 1) {
+    $output = drupal_get_form('userpoints_filter_cat_select', 'userpoints/', arg(3));
+    $output .= theme('table', $header, $rows);
+    $output .= theme('pager', NULL, $pager_limit, 0);
+  }
+  else {
+    $output = theme('table', $header, $rows);
+    $output .= theme('pager', NULL, $pager_limit, 0);
+  }
+
+
+  return $output;
+}
 /*
 * Purpose: Provides a dropdown to filter by category
 */
@@ -1150,7 +1228,6 @@ function userpoints_block($op = 'list', $delta = 0, $edit = array()) {
 
     case 'view':
       if (user_access(USERPOINTS_PERM_VIEW)) {
-        drupal_set_message("Delta is $delta");
         if ($delta == -1) {
           $title = t('@user\'s !points', array_merge(array('@user' => $user->name), userpoints_translation()));;
           if ($user->uid) {
