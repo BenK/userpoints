@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.28 2007-10-23 16:36:34 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.29 2007-11-07 14:19:53 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -296,7 +296,7 @@ function userpoints_admin_settings() {
                          your message you can use the following variables. 
                          <br /> !points = The name used in branding 
                          above (also use !Points and !point)
-                         <br />!event = The original event that granted the points 
+                         <br />!operation = Original operation that granted the points 
                          <br/> !description = Original description for the point 
                          <br /> !txn_id Original transaction ID 
                          <br /> !date = Date of the original entry'),
@@ -401,12 +401,14 @@ function userpoints_get_current_points($uid = NULL, $tid = NULL) {
  *    'points' => # of points (int) (required)
  *    'moderate' => TRUE/FALSE 
  *    'uid' => $user->uid 
- *    'event' => 'comment'
+ *    'operation' => 'published' 'moderated' etc.
  *    'tid' => 'category ID' 
  *    'expirydate' => timestamp or 0, 0 = non-expiring; NULL = site default
  *    'description' => 'description'
  *    'reference' => reserved for module specific use
  *    'txn_id' => Transaction ID of points, If present an UPDATE is performed
+ *    'entity_id' => ID of an entity in the Database. ex. $node->id or $user->uid
+ *    'entity_type' => string of the entity type. ex. 'node' or 'user' NOT 'node-content-custom'
  *
  * @return FALSE when no action is take, TRUE when points are credited or debited
  */
@@ -429,8 +431,8 @@ function userpoints_userpointsapi($params) {
       global $user;
       $params['uid'] = $user->uid;
     }
-    if (!isset($params['event'])) {
-      $params['event'] = NULL;
+    if (!isset($params['operation'])) {
+      $params['operation'] = NULL;
     }
     if (!isset($params['description'])) {
       $params['description'] = NULL;
@@ -453,6 +455,12 @@ function userpoints_userpointsapi($params) {
     if (!isset($params['tid']) || !is_numeric($params['tid'])) {
       //if not passed then site default is used
       $params['tid'] = variable_get(USERPOINTS_CATEGORY_DEFAULT_TID, NULL);
+    }
+    if (!isset($params['entity_id'])) { 
+      $params['entity_id'] = NULL; 
+    }
+    if (!isset($params['entity_type'])) { 
+      $params['entity_type'] = NULL; 
     }
     // anonymous users do not get points, and there have to be points to process
     if (($params['uid'] == 0 || $params['points'] == 0)) {
@@ -507,7 +515,7 @@ function userpoints_userpointsapi($params) {
     drupal_set_message($mesg);
   }
   // Call the _userpoints hook to allow modules to act after points are awarded
-  module_invoke_all('userpoints', 'points after', $params['points'], $account->uid, $params['event']);
+  module_invoke_all('userpoints', 'points after', $params['points'], $account->uid, $params['operation']);
   return TRUE;
 }
 
@@ -546,8 +554,8 @@ function _userpoints_transaction(&$params) {
         $params['status'] = 0;
       }
     }
-    if (!isset($params['event'])) { 
-      $params['event'] = NULL; 
+    if (!isset($params['operation'])) { 
+      $params['operation'] = NULL; 
     }
     if (!isset($params['description'])) { 
       $params['description'] = NULL; 
@@ -572,12 +580,18 @@ function _userpoints_transaction(&$params) {
     if (!isset($params['parent_txn_id'])) { 
       $params['parent_txn_id'] = NULL; 
     }
+    if (!isset($params['entity_id'])) { 
+      $params['entity_id'] = NULL; 
+    }
+    if (!isset($params['entity_type'])) { 
+      $params['entity_type'] = NULL; 
+    }
   } // if txn_id
   if (is_numeric($params['txn_id'])) {
     //A transaction ID was passed in so we'll update the transaction
     $result = db_query("SELECT txn_id, uid, approver_uid, points, 
-      time_stamp, status, event, description, reference, expirydate, expired, 
-      parent_txn_id, tid
+      time_stamp, status, operation, description, reference, expirydate, expired, 
+      parent_txn_id, tid, entity_id, entity_type
       FROM {userpoints_txn}
       WHERE txn_id = %d",
       $params['txn_id']);
@@ -599,20 +613,22 @@ function _userpoints_transaction(&$params) {
   }
   else {
     db_query("INSERT INTO {userpoints_txn}
-      (uid, points, time_stamp, status, event, description, 
-      reference, expirydate, expired, parent_txn_id, tid)
-      VALUES (%d, %d, %d, %d, '%s', '%s', '%s', %d, %d, %d, %d)",
+      (uid, points, time_stamp, status, operation, description, 
+      reference, expirydate, expired, parent_txn_id, tid, entity_id, entity_type)
+      VALUES (%d, %d, %d, %d, '%s', '%s', '%s', %d, %d, %d, %d, %d, '%s')",
       $params['uid'],
       $params['points'],
       time(),
       $params['status'],
-      $params['event'],
+      $params['operation'],
       $params['description'],
       $params['reference'],
       $params['expirydate'],
       $params['expired'], 
       $params['parent_txn_id'],
-      $params['tid']
+      $params['tid'],
+      $params['entity_id'],
+      $params['entity_type']
     );
     if ($params['status'] != true) {
       _userpoints_update_cache($params);
@@ -731,12 +747,12 @@ function userpoints_admin_manage() {
     array('data' => t('User'), 'field' => 'uid', 'sort' => 'desc'),
     array('data' => t('Time stamp'), 'field' => 'time_stamp'),
     array('data' => t('!Points', userpoints_translation()), 'field' => 'points'),
-    array('data' => t('Event'), 'field' => 'event'),
+    array('data' => t('Operation'), 'field' => 'operation'),
     array('data' => t('Category'), 'field' => 'cat'),
     array('data' => t('Operation')),
   );
 
-  $sql = "SELECT p.txn_id, p.uid, p.time_stamp, p.points, p.event, p.status, 
+  $sql = "SELECT p.txn_id, p.uid, p.time_stamp, p.points, p.operation, p.status, 
           t.name as cat
           FROM {userpoints_txn} p 
           LEFT JOIN {term_data} t ON p.tid = t.tid 
@@ -770,7 +786,7 @@ function userpoints_admin_manage() {
         array('data' => theme('username', $user)),
         array('data' => format_date($data->time_stamp, 'custom', 'Y-m-d H:i')),
         array('data' => $data->points, 'align' => 'right'),
-        array('data' => $data->event),
+        array('data' => $data->operation),
         array('data' => $data->cat),
         array('data' => l('approve', "admin/user/userpoints/approve/$data->txn_id") .
                   ' '. l('decline', "admin/user/userpoints/decline/$data->txn_id") .
@@ -924,7 +940,7 @@ function userpoints_admin_txn() {
         '#value' => $user->uid,
         );
 
-      $form['event'] = array(
+      $form['operation'] = array(
         '#type'  => 'hidden',
         '#value' => 'admin',
         );
@@ -962,13 +978,13 @@ function userpoints_admin_txn() {
        '#description'   => t('The user ID of the person who approved this transaction. 0 means not yet approved.'),
        );
 
-      $form['event'] = array(
+      $form['operation'] = array(
         '#type'  => 'textfield',
-        '#description' => t('Event'),
-        '#default_value' => $txn->event,
+        '#description' => t('Operation'),
+        '#default_value' => $txn->operation,
         '#size'          => 20,
         '#maxlength'     => 20,
-        '#description'   => t('The event type for this transaction. Normally, it is "admin".'),
+        '#description'   => t('The operation type for this transaction. Normally, it is "admin".'),
         );
 
       $form['status'] = array(
@@ -1005,7 +1021,7 @@ function userpoints_admin_txn_submit($form_id, $form = NULL) {
       $params = array(
                   'points' => $form['points'],
                   'uid' => $txn_user->uid,
-                  'event' => 'admin',
+                  'operation' => 'admin',
                   'description' => $form['description'],
                   'reference' => $form['reference'],
                   'tid' => $form['tid'],
@@ -1026,7 +1042,7 @@ function userpoints_admin_txn_submit($form_id, $form = NULL) {
         'approver_id' => $form['approver_uid'],
         'points' => $form['points'],
         'time_stamp' => strtotime($form['time_stamp']),
-        'event' => $form['event'],
+        'operation' => $form['operation'],
         'description' => $form['description'],
         'reference' => $form['reference'],
         'status' => $form['status'],
@@ -1320,7 +1336,7 @@ function userpoints_date_to_timestamp($date) {
 *          opposite transactions (sum of 0)
 */
 function userpoints_expire_transactions() {
-  $sql = "SELECT txn_id, uid, points, time_stamp, event, description 
+  $sql = "SELECT txn_id, uid, points, time_stamp, operation, description 
           FROM {userpoints_txn} 
           WHERE status = 0 AND expired = 0 
           AND (expirydate < %d AND expirydate != 0)"; 
@@ -1329,7 +1345,7 @@ function userpoints_expire_transactions() {
     $line['time_stamp'] = format_date($line['time_stamp'], 'custom', 'Y-m-d H:i'); 
     $description = t(variable_get(USERPOINTS_EXPIRY_DESCRIPTION, NULL), 
                      array_merge(userpoints_translation(), 
-                                 array('!event' => $line['event'], 
+                                 array('!operation' => $line['operation'], 
                                        '!description' => $line['description'], 
                                        '!txn_id' => $line['txn_id'], 
                                        '!date' => $line['time_stamp']
@@ -1340,7 +1356,7 @@ function userpoints_expire_transactions() {
     $params = array(
                 'points' => -$line['points'],
                 'uid' => $line['uid'],
-                'event' => 'expiry',
+                'operation' => 'expiry',
                 'description' => $description,
                 'parent_txn_id' => $line['txn_id'],
                 'moderate' => false,
@@ -1399,11 +1415,11 @@ function userpoints_my_userpoints() {
     array('data' => t('!Points', userpoints_translation()), 'field' => 'points'),
     array('data' => t('Approved?'), 'field' => 'status'),
     array('data' => t('Date'), 'field' => 'time_stamp', 'sort' => 'desc'),
-    array('data' => t('Event'), 'field' => 'event'),
+    array('data' => t('Operation'), 'field' => 'operation'),
     array('data' => t('Category'), 'field' => 'cat'),
     array('data' => t('Description'), 'field' => 'description'),
   );
-  $sql  = "SELECT p.points, p.time_stamp, p.event, p.description, p.status, p.tid,
+  $sql  = "SELECT p.points, p.time_stamp, p.operation, p.description, p.status, p.tid,
                   t.name as cat
            FROM {userpoints_txn} p 
            LEFT JOIN {term_data} t on p.tid = t.tid
@@ -1428,7 +1444,7 @@ function userpoints_my_userpoints() {
           array('data' => $row->points, 'align' => 'center'),
           array('data' => $status, 'align' => 'center'),
           array('data' => format_date($row->time_stamp, 'small'), 'align' => 'center'),
-          array('data' => $row->event),
+          array('data' => $row->operation),
           array('data' => $row->cat),
           array('data' => $description),
       );
