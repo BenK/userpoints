@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.30 2007-11-07 15:19:19 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.31 2007-11-07 16:38:38 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1420,7 +1420,7 @@ function userpoints_my_userpoints() {
     array('data' => t('Description'), 'field' => 'description'),
   );
   $sql  = "SELECT p.points, p.time_stamp, p.operation, p.description, p.status, p.tid,
-                  t.name as cat
+                  t.name as cat , p.entity_id, p.entity_type 
            FROM {userpoints_txn} p 
            LEFT JOIN {term_data} t on p.tid = t.tid
            WHERE p.uid = %d";
@@ -1440,11 +1440,43 @@ function userpoints_my_userpoints() {
       else {
         $description = t('None');
       }
+      $operation = module_invoke_all('userpoints', 'entity_type', $row);
+
+      if (!$operation) {
+        switch ($row->entity_type) {
+          case 'node' :
+            $node = node_load($row->entity_id);
+            if ($node) {
+              $operation = l($row->operation,'node/'.$node->nid, array('title' => $node->title));
+            }
+            else {
+              $operation = $row->operation;
+            }
+            break;
+          case 'comment' :
+            if (module_exists('comment')) {
+              //We have to load the comment to get the nid for the comment
+              $comment = _comment_load($row->entity_id);
+              if ($comment) {
+                $operation = l($row->operation, 'node/'. $comment->nid, array('title' => $comment->subject), NULL, 'comment-'. $comment->cid);
+              }
+              else {
+                $operation = $row->operation;
+              }
+            }
+            else {
+              drupal-set_message("broke through!");
+            }
+            break;
+         default:
+            $operation = $row->operation;
+        }
+      }
       $rows[] = array(
           array('data' => $row->points, 'align' => 'center'),
           array('data' => $status, 'align' => 'center'),
           array('data' => format_date($row->time_stamp, 'small'), 'align' => 'center'),
-          array('data' => $row->operation),
+          array('data' => $operation),
           array('data' => $row->cat),
           array('data' => $description),
       );
