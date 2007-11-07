@@ -1,5 +1,5 @@
 <?php
-// $Id: userpoints.install,v 1.2.2.7.2.7 2007-10-18 06:20:13 jredding Exp $
+// $Id: userpoints.install,v 1.2.2.7.2.8 2007-11-07 13:13:44 jredding Exp $
 
 /**
  * Install the initial schema.
@@ -153,6 +153,22 @@ function userpoints_update_6() {
       $ret[] = update_sql("ALTER TABLE {userpoints}
                           ADD tid INT NULL AFTER last_update,
                           ADD pid INT NOT NULL AUTO_INCREMENT PRIMARY KEY
+                          ");
+      break;
+  }
+  return $ret;
+}
+function userpoints_update_7() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("ALTER TABLE {userpoints_txn} 
+                         ADD entity_id INT(11) NULL AFTER tid,
+                         ADD entity_type VARCHAR(32) NULL AFTER entity_id
+                          ");
+      $ret[] = update_sql("ALTER TABLE {userpoints_txn}
+			 CHANGE event operation VARCHAR(32) 
                           ");
       break;
   }
