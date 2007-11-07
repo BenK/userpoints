@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.29 2007-11-07 14:19:53 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.30 2007-11-07 15:19:19 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -612,7 +612,7 @@ function _userpoints_transaction(&$params) {
     _userpoints_update_cache($params);
   }
   else {
-    db_query("INSERT INTO {userpoints_txn}
+    $ret = db_query("INSERT INTO {userpoints_txn}
       (uid, points, time_stamp, status, operation, description, 
       reference, expirydate, expired, parent_txn_id, tid, entity_id, entity_type)
       VALUES (%d, %d, %d, %d, '%s', '%s', '%s', %d, %d, %d, %d, %d, '%s')",
@@ -630,7 +630,7 @@ function _userpoints_transaction(&$params) {
       $params['entity_id'],
       $params['entity_type']
     );
-    if ($params['status'] != true) {
+    if ($params['status'] != true && $ret != false) {
       _userpoints_update_cache($params);
     }
   }
