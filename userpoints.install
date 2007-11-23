@@ -1,5 +1,5 @@
 <?php
-// $Id: userpoints.install,v 1.2.2.7.2.8 2007-11-07 13:13:44 jredding Exp $
+// $Id: userpoints.install,v 1.2.2.7.2.9 2007-11-23 11:20:55 jredding Exp $
 
 /**
  * Install the initial schema.
@@ -25,13 +25,15 @@ function userpoints_install() {
           points        INT(10) NOT NULL DEFAULT '0',
           time_stamp    INT(11) NOT NULL DEFAULT '0',
           status        INT(1) NOT NULL DEFAULT '0',
-          event         VARCHAR(32),
           description   TEXT,
           reference     varchar(128),
           expirydate    int(11) NULL default '0',
           expired       tinyint (1) NOT NULL default '0',
           parent_txn_id int(11) NOT NULL default '0',
           tid           INT(11) default NULL,
+          entity_id     INT(11) default NULL, 
+          entity_type   varchar(32) default NULL, 
+          operation         VARCHAR(32),
           PRIMARY KEY (txn_id),
           KEY (event),
           KEY (reference),
