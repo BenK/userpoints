@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.31 2007-11-07 16:38:38 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.32 2007-12-07 15:06:34 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1405,8 +1405,8 @@ function userpoints_my_userpoints() {
   if (_userpoints_user_exists($uid)) {
     $approved_total = userpoints_get_current_points($uid);
     $result = db_query("SELECT SUM(points) FROM {userpoints_txn} WHERE uid = %d AND status = 1", $uid);
-    if (mysql_result($result, 0, 0)) {
-      $unapproved_total = mysql_result($result, 0, 0);
+    if (db_result($result, 0, 0)) {
+      $unapproved_total = db_result($result, 0, 0);
     }
     $overall_total = ($approved_total + $unapproved_total);
   }
@@ -1428,7 +1428,7 @@ function userpoints_my_userpoints() {
   $pager_limit = variable_get(USERPOINTS_REPORT_LIMIT, 10);
   $result = pager_query($sql, $pager_limit, 0, NULL, $uid);
   $stati = userpoints_txn_status();
-  if (mysql_num_rows($result) > 0) {
+  if (db_num_rows($result) > 0) {
     while ($row = db_fetch_object($result)) {
       $status = $stati[$row->status];
       if (!$row->cat) { 
