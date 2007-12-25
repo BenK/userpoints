@@ -1,6 +1,6 @@
-$Id: README.txt,v 1.4.2.1.2.2 2007-10-14 17:02:14 jredding Exp $
+$Id: README.txt,v 1.4.2.1.2.3 2007-12-25 17:30:12 kbahey Exp $
 
-Copyright 2005 http://2bits.com
+Copyright 2005-2007 http://2bits.com
 
 Description
 -----------
