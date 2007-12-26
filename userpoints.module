@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.35 2007-12-26 10:37:09 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.36 2007-12-26 10:40:08 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1250,7 +1250,7 @@ function userpoints_block($op = 'list', $delta = 0, $edit = array()) {
         if ($delta == -1) {
           $title = t('@user\'s !points', array_merge(array('@user' => $user->name), userpoints_translation()));;
           if ($user->uid) {
-            $points = (int) db_result(db_query('SELECT points FROM {userpoints} WHERE uid = %d', $user->uid));
+            $points = (int) db_result(db_query('SELECT points FROM {userpoints} WHERE uid = %d ORDER BY points DESC', $user->uid));
             $show_points = format_plural($points, t('!point', userpoints_translation()), t('!points', userpoints_translation()));
             $content = t('You have %p %c', array('%p' => $points, '%c' => $show_points));
           }
