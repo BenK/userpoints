@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.40 2007-12-26 12:57:07 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.41 2007-12-26 16:04:33 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1412,12 +1412,35 @@ function userpoints_my_userpoints() {
 
   // Look up user's total
   if (_userpoints_user_exists($uid)) {
-    $approved_total = userpoints_get_current_points($uid);
+    //Grab all tids for this user
+    $sql = "SELECT p.tid, t.name
+      FROM {userpoints_txn} p
+      LEFT JOIN {term_data} t on p.tid = t.tid
+      WHERE uid = %d 
+      GROUP BY p.tid, t.name";
+    $results = db_query($sql, $uid);  
+    while ($result = db_fetch_array($results)) {
+      if ($result['name'] == null) {
+        $result['name'] = t('!Uncategorized', userpoints_translation());
+      }
+      //pull the sum from the caching table for resource reason and b/c the 
+      $result['total'] = userpoints_get_current_points($uid, $result['tid']);
+      $args['subtotals'][$result['tid']] = $result;
+
+      //maintain a grand total
+      $grand_total += $result['total'];
+    }
+    $args['approved_total'] = $grand_total;
+
+    //Grab the unmoderated point total
     $result = db_query("SELECT SUM(points) FROM {userpoints_txn} WHERE uid = %d AND status = 1", $uid);
     if (db_result($result, 0, 0)) {
-      $unapproved_total = db_result($result, 0, 0);
+      $args['unapproved_total'] = db_result($result, 0, 0);
     }
-    $overall_total = ($approved_total + $unapproved_total);
+    else {
+      $args['unapproved_total'] =0;
+    }
+    $args['overall_total'] = ($args['approved_total'] + $args['unapproved_total']);
   }
 
   $header = array(
@@ -1473,9 +1496,6 @@ function userpoints_my_userpoints() {
                 $operation = $row->operation;
               }
             }
-            else {
-              drupal-set_message("broke through!");
-            }
             break;
          default:
             $operation = $row->operation;
@@ -1497,10 +1517,6 @@ function userpoints_my_userpoints() {
     );
   }
 
-  $args = array('overall_total' => $overall_total,
-    'unapproved_total' => $unapproved_total,
-    'approved_total' => $approved_total
-  );
 
   return theme('userpoints_my_userpoints', $args, $header, $rows);
 }
@@ -1569,7 +1585,16 @@ function userpoints_get_default_tid() {
 function theme_userpoints_my_userpoints($args, $header, $rows) {
   $pager_limit = variable_get(USERPOINTS_REPORT_LIMIT, 10);
   $output  = theme('table', $header, $rows);
-  $output .= '<p><strong>'. t('Net !points Balance', userpoints_translation()) .':</strong> '. $args['approved_total'] .'</p>';
+  $output .= "<p>";
+  foreach ($args['subtotals'] as $tid => $data) {
+    $output .= '<strong>'. $data['name'] .' '. t('!points Balance', userpoints_translation()) .':</strong> '. $data['total'] .'<br />';
+  }
+  $output .= "</p>";
+  $output .= "<p>";
+  $output .= '<strong>'. t('Approved !points Balance', userpoints_translation()) .':</strong> '. $args['approved_total'] .'<br />';
+  $output .= '<strong>'. t('!Points awaiting moderation', userpoints_translation()) .':</strong> '. $args['unapproved_total'] .'<br />';
+  $output .= '<strong>'. t('Net !points Balance', userpoints_translation()) .':</strong> '. $args['overall_total'] .'<br />';
+  $output .= "</p>";
   $output .= theme('pager', NULL, $pager_limit, 0);
 
   return $output;
