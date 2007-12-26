@@ -1,9 +1,11 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.36 2007-12-26 10:40:08 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.37 2007-12-26 10:47:08 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
 define('USERPOINTS_PERM_VIEW',           'view userpoints');
+//The permission(PERM_USE) was removed from use as per #158490 it'll remain 
+//out until code exists to use the permission (jredding 12/26/2007)
 define('USERPOINTS_PERM_USE',            'use userpoints');
 define('USERPOINTS_PERM_ADMIN',          'admin userpoints');
 
@@ -175,7 +177,7 @@ function userpoints_menu($may_cache) {
  * Implementation of hook_perm().
  */
 function userpoints_perm() {
-  return array(USERPOINTS_PERM_VIEW, USERPOINTS_PERM_USE, USERPOINTS_PERM_ADMIN);
+  return array(USERPOINTS_PERM_VIEW, USERPOINTS_PERM_ADMIN);
 }
 
 /**
