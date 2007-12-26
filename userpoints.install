@@ -1,5 +1,5 @@
 <?php
-// $Id: userpoints.install,v 1.2.2.7.2.10 2007-12-05 14:56:25 jredding Exp $
+// $Id: userpoints.install,v 1.2.2.7.2.11 2007-12-26 08:22:30 jredding Exp $
 
 /**
  * Install the initial schema.
@@ -30,7 +30,7 @@ function userpoints_install() {
           expirydate    int(11) NULL default '0',
           expired       tinyint (1) NOT NULL default '0',
           parent_txn_id int(11) NOT NULL default '0',
-          tid           INT(11) default NULL,
+          tid           INT(11) NOT NULL default '0',
           entity_id     INT(11) default NULL, 
           entity_type   varchar(32) default NULL, 
           operation         VARCHAR(32),
@@ -171,6 +171,18 @@ function userpoints_update_7() {
                           ");
       $ret[] = update_sql("ALTER TABLE {userpoints_txn}
 			 CHANGE event operation VARCHAR(32) 
+                          ");
+      break;
+  }
+  return $ret;
+}
+function userpoints_update_8() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("ALTER TABLE {userpoints_txn} 
+                         CHANGE tid tid INT(11) NOT NULL default '0'
                           ");
       break;
   }
