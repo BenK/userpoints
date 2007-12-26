@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.32 2007-12-07 15:06:34 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.33 2007-12-26 08:28:59 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -370,7 +370,8 @@ function userpoints_admin_settings() {
       '#options' =>  userpoints_get_categories(),
       '#description' => t('By default all points are assigned to this category. 
                            You can modify what categories are available by modifying
-                           the Userpoints taxonomy'),
+                           the <a href="!url">Userpoints taxonomy</a>', 
+                           array('!url' => url('admin/content/taxonomy/'. variable_get(USERPOINTS_CATEGORY_DEFAULT_VID, '')))),
     );
   }
 
