@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.38 2007-12-26 12:28:56 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.39 2007-12-26 12:49:22 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1271,7 +1271,7 @@ function userpoints_block($op = 'list', $delta = 0, $edit = array()) {
                   FROM {userpoints} p
                   INNER JOIN {users} u USING (uid)';
           if ( $delta == 0 ) {
-            $sql .= ' WHERE p.tid = 0 OR p.tid IS NULL ';
+            $sql .= ' WHERE p.tid = 0 OR p.tid IS NULL ORDER BY p.points DESC';
             $result = db_query_range($sql, 0, $num);
           } 
           else {
@@ -1569,8 +1569,6 @@ function userpoints_get_default_tid() {
 function theme_userpoints_my_userpoints($args, $header, $rows) {
   $pager_limit = variable_get(USERPOINTS_REPORT_LIMIT, 10);
   $output  = theme('table', $header, $rows);
-  $output .= '<p><strong>'. t('Overall Total !points', userpoints_translation()) .':</strong> '. $args['overall_total'] .'<br />';
-  $output .= '<strong>'. t('Unapproved !points', userpoints_translation()) .':</strong> '. $args['unapproved_total'] .'</p>';
   $output .= '<p><strong>'. t('Net !points Balance', userpoints_translation()) .':</strong> '. $args['approved_total'] .'</p>';
   $output .= theme('pager', NULL, $pager_limit, 0);
 
