@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.4.2.1.2.3 2007-12-25 17:30:12 kbahey Exp $
+$Id: README.txt,v 1.4.2.1.2.4 2007-12-26 10:37:09 jredding Exp $
 
 Copyright 2005-2007 http://2bits.com
 
@@ -109,15 +109,20 @@ userpoints_userpointsapi()
   to NULL will cause the entry to be NULL, defaults are only used if the 
   parameter is not set
   
-  $uid = (int) User ID 
-  $points = (int) # of points to award the user 
-  $txn_id = (int) Transaction ID of a current points record. If present an UPDATE occurs
-  $moderation = (boolean) TRUE or FALSE. If NULL site settings are adhered to
-  $description = (string) fulltext Description presented to the user
-  $expirydate = (timestamp) timestamp the date/time when the points will be expired (depends on cron)
-  $event = (string) varchar32 descriptive identifier administrative purposes
-  $reference = (string) varchar32 indexed/searchable field on the DB
-  $tid = (int) Taxonomy ID to place these points into; MUST BE in the userpoints Vocabulary!
+  'uid'         => (int) User ID 
+  'points'      => (int) # of points to award the user 
+  'txn_id'      => (int) Transaction ID of a current points record. If
+                         present an UPDATE occurs
+  'moderation'  => (boolean) TRUE or FALSE. If NULL site settings are adhered to
+  'description' => (string) fulltext Description presented to the user
+  'expirydate'  => (timestamp) timestamp the date/time when the points will
+                               be expired (depends on cron)
+  'event'       => (string) varchar32 descriptive identifier administrative purposes
+  'reference'   => (string) varchar32 indexed/searchable field on the DB
+  'display'     => (boolean) Whether or not to display the "Points awarded"
+                             message. If null, fall back to USERPOINTS_DISPLAY_MESSAGE
+  'tid'         => (int) Taxonomy ID to place these points into; MUST BE in
+                         the userpoints Vocabulary!
 
   Examples
     //Add 5 points to the currently logged in user

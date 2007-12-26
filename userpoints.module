@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.34 2007-12-26 08:36:57 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.35 2007-12-26 10:37:09 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -407,6 +407,7 @@ function userpoints_get_current_points($uid = NULL, $tid = NULL) {
  *    'expirydate' => timestamp or 0, 0 = non-expiring; NULL = site default
  *    'description' => 'description'
  *    'reference' => reserved for module specific use
+ *    'display' => whether or not to display "points awarded" message
  *    'txn_id' => Transaction ID of points, If present an UPDATE is performed
  *    'entity_id' => ID of an entity in the Database. ex. $node->id or $user->uid
  *    'entity_type' => string of the entity type. ex. 'node' or 'user' NOT 'node-content-custom'
@@ -440,6 +441,9 @@ function userpoints_userpointsapi($params) {
     }
     if (!isset($params['reference'])) {
       $params['reference'] = NULL;
+    }
+    if (!isset($params['display'])) {
+      $params['display'] = NULL;
     }
     if (!isset($params['moderate'])) {
       //if not passed then site default is used
@@ -512,7 +516,7 @@ function userpoints_userpointsapi($params) {
         ))));
   } //if moderation
 
-  if ($mesg && variable_get(USERPOINTS_DISPLAY_MESSAGE, 1) == 1) {
+  if ($mesg && ($params['display'] || ($params['display'] === null && variable_get(USERPOINTS_DISPLAY_MESSAGE, 1) == 1))) {
     drupal_set_message($mesg);
   }
   // Call the _userpoints hook to allow modules to act after points are awarded
