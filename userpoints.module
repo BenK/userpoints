@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.37 2007-12-26 10:47:08 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.38 2007-12-26 12:28:56 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -737,11 +737,13 @@ function userpoints_user($op, &$edit, &$account, $category = '') {
       if (user_access(USERPOINTS_PERM_ADMIN)) {
         $points = l($points, 'admin/user/userpoints/add/'. $account->uid, array('title' => t('Manage points')));
       }
-      $disp_points[] = array(
-        'title' => t('User !points', userpoints_translation()),
-        'value' => $points,
-        );
-      return array(t('!Points', userpoints_translation()) => $disp_points);
+      if (user_access(USERPOINTS_PERM_VIEW)) {
+        $disp_points[] = array(
+          'title' => t('User !points', userpoints_translation()),
+          'value' => $points,
+          );
+        return array(t('!Points', userpoints_translation()) => $disp_points);
+      }
       break;
   }
 }
