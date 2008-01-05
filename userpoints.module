@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.44 2008-01-05 06:45:14 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.45 2008-01-05 07:43:15 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -528,8 +528,8 @@ function userpoints_userpointsapi($params) {
   $ret = _userpoints_transaction($params);
   if ($ret == false) {
     return array (
-      'status' = false,
-      'reason' = 'transaction failed in _userpoints_transaction, this is an internal module error',
+      'status' => false,
+      'reason' => 'transaction failed in _userpoints_transaction, this is an internal module error',
     );
   }
   
