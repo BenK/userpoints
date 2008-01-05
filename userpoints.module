@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.42 2007-12-26 17:29:51 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.43 2008-01-05 06:14:41 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -429,7 +429,12 @@ function userpoints_userpointsapi($params) {
     }
     if (!is_array($params)) {
       //has to be an array to continue
-      return false;
+      return array(
+        'status' => false,
+        'reason' => 'Parameters did not properly form as an array, 
+                     this is an internal module error.
+                    ',
+      );
     }
     if (!isset($params['uid'])) {
       global $user;
@@ -471,7 +476,12 @@ function userpoints_userpointsapi($params) {
     }
     // anonymous users do not get points, and there have to be points to process
     if (($params['uid'] == 0 || $params['points'] == 0)) {
-      return FALSE;
+      return array(
+        'status' => false,
+        'reason' => 'uid or points = 0. Anonymous users do not get points
+                     and there must be points to process. 
+                    ',
+      );
     }
   } //if txn_id
 
@@ -484,7 +494,10 @@ function userpoints_userpointsapi($params) {
   foreach ($rc as $key => $value) {
     if ($value == FALSE) {
       // Do not process the points
-      return FALSE;
+      return array (
+        'status' => false,
+        'reason' => '$key returned false from the hook_userpoints points before call',
+      );
     }
   }
   
@@ -496,7 +509,13 @@ function userpoints_userpointsapi($params) {
   }
 
 
-  _userpoints_transaction($params);
+  $ret = _userpoints_transaction($params);
+  if ($ret == false) {
+    return array (
+      'status' = false,
+      'reason' = 'transaction failed in _userpoints_transaction, this is an internal module error',
+    );
+  }
   
   if ($params['status'] == 1) {
     $mesg = (t('User %uname %op %pointsvalue !points, pending administrator approval.',
@@ -516,14 +535,16 @@ function userpoints_userpointsapi($params) {
         '%pointsvalue' => abs($params['points']),
         '%total'  => userpoints_get_current_points($params['uid'], $params['tid'])
         ))));
-  } //if moderation
+  } //if $params['status']
 
   if ($mesg && ($params['display'] || ($params['display'] === null && variable_get(USERPOINTS_DISPLAY_MESSAGE, 1) == 1))) {
     drupal_set_message($mesg);
   }
   // Call the _userpoints hook to allow modules to act after points are awarded
   module_invoke_all('userpoints', 'points after', $params['points'], $account->uid, $params['operation']);
-  return TRUE;
+  return array (
+    'status' => true,
+  );
 }
 
 /*
