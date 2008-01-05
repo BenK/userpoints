@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.43 2008-01-05 06:14:41 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.44 2008-01-05 06:45:14 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -395,6 +395,22 @@ function userpoints_get_current_points($uid = NULL, $tid = NULL) {
     $tid = userpoints_get_default_tid();
   }
   return (int)db_result(db_query('SELECT points FROM {userpoints} WHERE uid = %d AND tid = %d', $uid, $tid));
+}
+
+/**
+ * @param uid: user id of the user to get or lose the points
+ *
+ * @return number of max points in that user's account
+ */
+function userpoints_get_max_points($uid = NULL, $tid = NULL) {
+  if (!$uid) { 
+    global $user;
+    $uid = $user->uid;
+  }
+  if (!$tid) {
+    $tid = userpoints_get_default_tid();
+  }
+  return (int)db_result(db_query('SELECT max_points FROM {userpoints} WHERE uid = %d AND tid = %d', $uid, $tid));
 }
 
 /**
