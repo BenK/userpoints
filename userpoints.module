@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.45 2008-01-05 07:43:15 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.46 2008-01-05 13:33:00 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -430,7 +430,9 @@ function userpoints_get_max_points($uid = NULL, $tid = NULL) {
  *    'entity_id' => ID of an entity in the Database. ex. $node->id or $user->uid
  *    'entity_type' => string of the entity type. ex. 'node' or 'user' NOT 'node-content-custom'
  *
- * @return FALSE when no action is take, TRUE when points are credited or debited
+ * @return array with status and reason. 
+ *     'status' => FALSE when no action is take, TRUE when points are credited or debited
+ *     'reason' => (string) error message to indicate reason for failure
  */
 function userpoints_userpointsapi($params) {
 
