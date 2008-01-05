@@ -1,4 +1,5 @@
-; $Id: userpoints.info,v 1.6 2007-06-29 22:14:37 kbahey Exp $
+; $Id: userpoints.info,v 1.7 2008-01-05 20:57:44 kbahey Exp $
 name = Userpoints
 description = Users earn points as they post nodes, comments, and vote on nodes.
 package = Userpoints
+
