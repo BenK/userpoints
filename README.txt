@@ -1,18 +1,35 @@
-$Id: README.txt,v 1.4.2.1.2.4 2007-12-26 10:37:09 jredding Exp $
+$Id: README.txt,v 1.4.2.1.2.5 2008-01-05 07:11:39 jredding Exp $
 
-Copyright 2005-2007 http://2bits.com
+Copyright 2005-2008 http://2bits.com
 
 Description
 -----------
-This module provides the ability for users to gain points when they
-do certain actions, such as:
+The userpoints and userpoints_basic module provides the ability for users to gain
+points with the do certain actions, such as:
 
 - posting a node (different points can be awarded for different
   node types, e.g. page, story, forum, image, ...etc.)
 - posting a comment
 - moderating a comment
 
-Additionally, points can be awarded for actions done by other modules,
+Upon deleting a node or a comment the number of points is subtracted.
+If a node or comment author is changed points are transferred respectively
+
+The number of points for each of the above actions is configurable by
+the site adminsitrator.
+
+A transaction log is created for each event. The log is viewable by
+the admin.
+
+Points can be moderated, i.e. approval can be done by the admin at a later
+time.
+
+A block displays the number of points the user gained. Another block 
+displays the top 5 users who earned points.
+
+----
+Using modules from the project http://drupal.org/project/userpoints_contrib 
+point can be awarded for other actions. 
 including:
 - voting on a node (requires the nodevote module)
 - referring a person to the site (requires referral module)
@@ -24,34 +41,16 @@ including:
 - purchasing from your e-commerce store (reward points)
 
 Using real money, users can purchase points from your ecommerce store
-as well.
-
-Moreover, the points can be used as currency for ecommerce as well,
+as well. Moreover, the points can be used as currency for ecommerce as well,
 as in a form of payment
 
-Upon deleting a node or a comment the number of points is subtracted.
-
-The number of points for each of the above actions is configurable by
-the site adminsitrator.
-
-A block displays the number of points the user gained. Another block 
-displays the top 5 users who earned points.
 
 This module is useful in providing an incentive for users to participate
-in the site, and be more active.
+in the site, and be more active. The module is easily extended through use of 
+the API (see below)
 
-A transaction log is created for each event. The log is viewable by
-the admin.
-
-Points can be moderated, i.e. approval can be done by the admin at a later
-time.
 
 Initally sponsored by: http://artalyst.com
-
-Extended Version
-----------------
-
-Contact the author for details.
 
 Installation
 ------------
@@ -170,6 +169,11 @@ userpoints_get_current_points($uid = NULL, $tid = NULL);
   If a tid is passed in that category's sum is returned otherwise
   the sites default category is used
 
+userpoints_get_max_points($uid = NULL, $tid = NULL);
+  Returns an integer of the sum of the user's max points achieved
+  If a tid is passed in that category's sum is returned otherwise
+  the sites default category is used
+
 userpoints_get_vid()
   Returns an integer of the userpoints Vocabulary
 
@@ -188,7 +192,7 @@ userpoints_get_categories()
 
 userpoints_get_default_expiry_date()
   Returns a UNIX timestamp of the site's default expiration date.
-  If an expiration date (or interval) it will be return otherwise NULL
+  If an expiration date (or interval) it will be returned otherwise NULL
 
 
 Bugs/Features/Patches:
