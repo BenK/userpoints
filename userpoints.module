@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.57 2008-01-05 20:57:44 kbahey Exp $
+//$Id: userpoints.module,v 1.58 2008-01-13 07:44:36 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -155,7 +155,7 @@ function userpoints_menu($may_cache) {
     );
     $items[] = array(
       'path' => 'userpoints',
-      'title'    => t('users by !points', userpoints_translation()),
+      'title'    => t('Users by !points', userpoints_translation()),
       'callback' => 'userpoints_list_users',
       'access' => user_access(USERPOINTS_PERM_VIEW),
       'type' => MENU_NORMAL_ITEM,
