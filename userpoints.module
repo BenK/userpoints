@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.59 2008-01-14 04:03:52 kbahey Exp $
+//$Id: userpoints.module,v 1.60 2008-01-19 19:10:35 kbahey Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -515,7 +515,7 @@ function userpoints_userpointsapi($params) {
       // Do not process the points
       return array (
         'status' => false,
-        'reason' => '$key returned false from the hook_userpoints points before call',
+        'reason' => t('%key returned false from the hook_userpoints points before call', array('%key' => $key)),
       );
     }
   }
@@ -681,7 +681,7 @@ function _userpoints_transaction(&$params) {
       _userpoints_update_cache($params);
     }
   }
-  return $params['status'];
+  return TRUE;
 } //function userpoints_transaction
 
 /*
