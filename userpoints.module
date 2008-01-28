@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.49 2008-01-19 19:09:54 kbahey Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.50 2008-01-28 17:51:30 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1232,7 +1232,7 @@ function userpoints_list_users() {
 function theme_userpoints_list_users(&$rows, &$tid, &$pager_limit) {
   //If there is only one category there is no sense in display the category filter dropdown
   if ( count(userpoints_get_categories())  > 1) {
-    $output = drupal_get_form('userpoints_filter_cat_select', 'userpoints/', arg(3));
+    $output = drupal_get_form('userpoints_filter_cat_select', 'userpoints/', $tid);
     $output .= theme('table', $header, $rows);
     $output .= theme('pager', NULL, $pager_limit, 0);
   }
