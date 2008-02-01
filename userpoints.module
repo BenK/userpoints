@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.64 2008-01-31 03:53:52 kbahey Exp $
+//$Id: userpoints.module,v 1.65 2008-02-01 03:52:42 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -156,7 +156,7 @@ function userpoints_menu($may_cache) {
     );
     $items[] = array(
       'path' => 'userpoints',
-      'title'    => t('users by !points', userpoints_translation()),
+      'title'    => t('Users by !points', userpoints_translation()),
       'callback' => 'userpoints_list_users',
       'access' => user_access(USERPOINTS_PERM_VIEW),
       'type' => MENU_NORMAL_ITEM,
@@ -1355,7 +1355,6 @@ function userpoints_block($op = 'list', $delta = 0, $edit = array()) {
             $result = db_query_range($sql, 0, $num);
           } 
           else {
-            $delta = 5;
             $sql .= ' WHERE p.tid = %d ORDER BY p.points DESC';
             $result = db_query_range($sql, $delta, 0, $num);
           }
