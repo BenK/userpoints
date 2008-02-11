@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.4.2.1.2.6 2008-01-05 13:33:00 jredding Exp $
+$Id: README.txt,v 1.4.2.1.2.7 2008-02-11 03:52:40 kbahey Exp $
 
 Copyright 2005-2008 http://2bits.com
 
@@ -116,7 +116,7 @@ userpoints_userpointsapi()
   'points'      => (int) # of points to award the user 
   'txn_id'      => (int) Transaction ID of a current points record. If
                          present an UPDATE occurs
-  'moderation'  => (boolean) TRUE or FALSE. If NULL site settings are adhered to
+  'moderate'    => (boolean) TRUE or FALSE. If NULL site settings are adhered to
   'description' => (string) fulltext Description presented to the user
   'expirydate'  => (timestamp) timestamp the date/time when the points will
                                be expired (depends on cron)
