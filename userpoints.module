@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.61 2008-03-04 10:18:54 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.62 2008-03-04 10:29:12 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1208,7 +1208,7 @@ function userpoints_admin_points() {
     $sql .= " AND p.points <> 0";
     $sql_cnt .= " AND points <> 0";
   }
-  $sql .= " GROUP BY p.uid, u.name, p.points";
+  $sql .= " GROUP BY p.uid, u.name, p.points, p.tid, t.name";
 
   $header = array(
     array('data' => t('User'), 'field' => 'u.name'),
@@ -1279,7 +1279,7 @@ function userpoints_list_users() {
     $sql .= " AND p.points <> 0";
     $sql_cnt .= " AND points <> 0";
   }
-  $sql .= " GROUP BY p.uid, u.name, p.points";
+  $sql .= " GROUP BY p.uid, u.name, p.points, p.tid, t.name";
   $header = theme('userpoints_list_users_header');
   $sql .= tablesort_sql($header);
   $pager_limit = variable_get(USERPOINTS_REPORT_USERCOUNT, 30);
