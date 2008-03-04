@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.57 2008-03-04 09:13:41 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.58 2008-03-04 09:29:37 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -802,8 +802,8 @@ function userpoints_admin_manage() {
     array('data' => t('Operation')),
   );
 
-  $sql = "SELECT p.txn_id, p.uid, p.time_stamp, p.points, p.operation, p.status, 
-          t.name as cat
+  $sql = "SELECT p.txn_id, p.uid, p.time_stamp, p.points, p.operation, p.status,
+          p.entity_type, p.entity_id, t.name as cat
           FROM {userpoints_txn} p 
           LEFT JOIN {term_data} t ON p.tid = t.tid 
           WHERE p.status = %d";
@@ -832,11 +832,40 @@ function userpoints_admin_manage() {
       if (!$data->cat) {
         $data->cat = t('!Uncategorized', userpoints_translation());
       }
+      $operation = module_invoke_all('userpoints', 'entity_type', $data);
+
+      if (!$operation) {
+        switch ($data->entity_type) {
+          case 'node' :
+            $node = node_load($data->entity_id);
+            if ($node) {
+              $operation = l($data->operation, 'node/'. $node->nid, array('title' => $node->title));
+            }
+            else {
+              $operation = $data->operation;
+            }
+            break;
+          case 'comment' :
+            if (module_exists('comment')) {
+              //We have to load the comment to get the nid for the comment
+              $comment = _comment_load($data->entity_id);
+              if ($comment) {
+                $operation = l($data->operation, 'node/'. $comment->nid, array('title' => $comment->subject), NULL, 'comment-'. $comment->cid);
+              }
+              else {
+                $operation = $data->operation;
+              }
+            }
+            break;
+          default:
+            $operation = $data->operation;
+        }
+      }
       $rows[] = array(
         array('data' => theme('username', $user)),
         array('data' => format_date($data->time_stamp, 'custom', 'Y-m-d H:i')),
         array('data' => $data->points, 'align' => 'right'),
-        array('data' => $data->operation),
+        array('data' => $operation),
         array('data' => $data->cat),
         array('data' => l('approve', "admin/user/userpoints/approve/$data->txn_id") .
           ' '. l('decline', "admin/user/userpoints/decline/$data->txn_id") .
