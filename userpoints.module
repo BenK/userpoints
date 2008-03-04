@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.55 2008-02-01 03:41:21 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.56 2008-03-04 09:07:12 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -741,13 +741,27 @@ function userpoints_get_default_expiry_date() {
 
 /*
  * Purpose: Checks to ensure that a user exists corresponding to a category
+ * @param $uid User ID to check for existence of points for the user
+ * @param $tid taxonomy id of the category to limit to, if omitted 
+ *   if the use has points in any category the return is true
+ * Returns : true if user found, falase otherwise 
  */
 function _userpoints_user_exists($uid, $tid = NULL) {
-  return (int)db_result(
-                db_query('SELECT COUNT(uid) 
-                          FROM {userpoints} 
-                          WHERE uid = %d AND tid = %d ', 
-                          $uid, $tid));
+  if ( is_numeric($tid) ) {
+    return (int)db_result(
+      db_query('SELECT COUNT(uid) 
+      FROM {userpoints} 
+      WHERE uid = %d AND tid = %d ', 
+      $uid, $tid));
+  }
+  else {
+    return (int)db_result(
+      db_query('SELECT COUNT(uid) 
+      FROM {userpoints} 
+      WHERE uid = %d', 
+      $uid ));
+
+  }
 }
 
 function userpoints_user($op, &$edit, &$account, $category = '') {
@@ -968,7 +982,7 @@ function userpoints_admin_txn() {
     $form['tid'] = array(
       '#type' => 'select',
       '#title' => t('Category'),
-      '#default_value' => variable_get(USERPOINTS_CATEGORY_DEFAULT_TID, NULL),
+      '#default_value' => variable_get(USERPOINTS_CATEGORY_DEFAULT_TID, 0),
       '#options' =>  userpoints_get_categories(),
       '#description' => t('Category to apply these points to'),
     );
@@ -1128,8 +1142,8 @@ function userpoints_admin_points() {
           ";
 
   //Check for filtering
-  if (is_numeric($tid) && $tid == 0) {
-    $sql .= "WHERE p.tid IS NULL OR p.tid = ''";
+  if ( $tid == 0) {
+    $sql .= "WHERE p.tid = 0";
     $cat = t('!Uncategorized', userpoints_translation()); 
   }
   elseif (is_numeric($tid)) {
@@ -1200,8 +1214,8 @@ function userpoints_list_users() {
           ";
 
   //Check for filtering
-  if (is_numeric($tid) && $tid == 0) {
-    $sql .= "WHERE p.tid IS NULL OR p.tid = ''";
+  if ($tid == 0) {
+    $sql .= "WHERE p.tid = 0 ";
     $cat = t('!Uncategorized', userpoints_translation()); 
   }
   elseif (is_numeric($tid)) {
