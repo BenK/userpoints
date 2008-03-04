@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.60 2008-03-04 09:59:03 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.61 2008-03-04 10:18:54 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1001,7 +1001,9 @@ function userpoints_admin_txn() {
     );  
 
   if ($txn->txn_id) {
-    $expirydate = format_date($txn->expirydate, 'custom', 'Y-m-d H:i O');
+    if ($txn->expirydate > 0) {
+      $expirydate = format_date($txn->expirydate, 'custom', 'Y-m-d H:i O');
+    }
   }
   else {
     //If we're not editing we use site defaults
