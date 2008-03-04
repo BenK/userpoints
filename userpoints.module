@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.59 2008-03-04 09:39:34 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.60 2008-03-04 09:59:03 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -957,15 +957,19 @@ function userpoints_admin_txn() {
   global $user;
 
   $mode = arg(3);
-  $txn_id = (int)arg(4);
   
   $timestamp = format_date(time(), 'custom', 'Y-m-d H:i O');
 
-  if ($mode == 'edit' && $txn_id) {
+  if ($mode == 'edit' && arg(4)) {
+    $txn_id = (int)arg(4);
     $result = db_query('SELECT * FROM {userpoints_txn} WHERE txn_id = %d', $txn_id);
     $txn = db_fetch_object($result);
     $timestamp = format_date($txn->time_stamp, 'custom', 'Y-m-d H:i O');
     $txn_user = user_load(array('uid' => $txn->uid));
+  }
+  elseif ($mode == 'add' && arg(4)) {
+    $uid = (int)arg(4);
+    $txn_user = user_load(array('uid' => $uid));
   }
 
   $form['txn_user'] = array(
