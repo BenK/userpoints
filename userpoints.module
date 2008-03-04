@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.58 2008-03-04 09:29:37 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.59 2008-03-04 09:39:34 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -494,6 +494,11 @@ function userpoints_userpointsapi($params) {
                     ',
       );
     }
+  }
+  else {
+    //We have a txn_id so we can look up some user information
+    $sql = "SELECT uid from {userpoints_txn} WHERE txn_id = %d";
+    $params['uid'] = db_result(db_query($sql, $params['txn_id']));
   } //if txn_id
 
   // Load the user object that will be awarded the points
@@ -511,9 +516,12 @@ function userpoints_userpointsapi($params) {
       );
     }
   }
-  
   if ($params['points'] < 0) {
     $msg = t('lost');
+  }
+  elseif ($params['status'] = 2) {
+    //points have been declined 
+    $msg = t('was declined');
   }
   else {
     $msg = t('earned');
