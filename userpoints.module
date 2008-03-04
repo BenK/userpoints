@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.65 2008-03-04 10:48:06 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.66 2008-03-04 10:52:29 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -525,7 +525,7 @@ function userpoints_userpointsapi($params) {
   if ($params['points'] < 0) {
     $msg = t('lost');
   }
-  elseif ($params['status'] = 2) {
+  elseif ($params['status'] == 2) {
     //points have been declined 
     $msg = t('was declined');
   }
