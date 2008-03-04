@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.56 2008-03-04 09:07:12 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.57 2008-03-04 09:13:41 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -938,7 +938,7 @@ function userpoints_admin_txn() {
     '#maxlength'     => 60,
     '#default_value' => $txn_user->name,
     '#autocomplete_path' => 'user/autocomplete',
-    '#description'   => t('Drupal User Name for the user you want the points to affect'),
+    '#description'   => t('User Name for the user you want the points to affect'),
     );
 
   $form['points'] = array(
