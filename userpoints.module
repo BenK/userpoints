@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.64 2008-03-04 10:40:24 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.65 2008-03-04 10:48:06 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -407,7 +407,7 @@ function userpoints_get_max_points($uid = NULL, $tid = NULL) {
     $tid = userpoints_get_default_tid();
   }
   elseif ($tid == 'all') {
-    return (int)db_result(db_query('SELECT SUM(max_points) FROM {userpoints} WHERE uid = %d,  $uid));
+    return (int)db_result(db_query('SELECT SUM(max_points) FROM {userpoints} WHERE uid = %d',  $uid));
   }
   return (int)db_result(db_query('SELECT max_points FROM {userpoints} WHERE uid = %d AND tid = %d', $uid, $tid));
 }
