@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.44.2.14.2.66 2008-03-04 10:52:29 jredding Exp $
+//$Id: userpoints.module,v 1.44.2.14.2.67 2008-03-05 05:43:58 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1263,13 +1263,15 @@ function userpoints_list_users() {
           ";
 
   //Check for filtering
-  if ($tid == 0) {
-    $sql .= "WHERE p.tid = 0 ";
-    $cat = t('!Uncategorized', userpoints_translation()); 
-  }
-  elseif (is_numeric($tid)) {
-    $sql .= "WHERE p.tid = %d";
-    $cat = db_result(db_query("SELECT name from {term_data} WHERE tid = %d", $tid));
+  if (is_numeric($tid)) {
+    if ($tid > 0) {
+      $sql .= "WHERE p.tid = %d";
+      $cat = db_result(db_query("SELECT name from {term_data} WHERE tid = %d", $tid));
+    }
+    else {
+      $sql .= "WHERE p.tid = %d";
+      $cat = t('!Uncategorized', userpoints_translation()); 
+    }
   }
   else {
     $cat = t('All');
