@@ -1,5 +1,7 @@
-; $Id: userpoints_views.info,v 1.1 2007-12-27 22:01:22 kbahey Exp $
+; $Id: userpoints_views.info,v 1.2 2008-03-26 20:12:43 kbahey Exp $
 name = Views Integration
 description = Adds userpoints related fields, sorts and filters to views. Benefits from the usernode module being installed, although not required.
-dependencies = userpoints views
+dependencies[] = userpoints
+dependencies[] = views
 package = Userpoints
+core = 6.x

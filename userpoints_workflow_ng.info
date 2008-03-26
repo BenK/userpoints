@@ -1,6 +1,7 @@
-; $Id: userpoints_workflow_ng.info,v 1.1 2008-01-05 17:41:45 kbahey Exp $
+; $Id: userpoints_workflow_ng.info,v 1.2 2008-03-26 20:12:43 kbahey Exp $
 name = Userpoints Workflow-NG integration
 description = Provides integration of Userpoints with Workflow-NG
-dependencies = userpoints workflow_ng
+dependencies[] = userpoints 
+dependencies[] = workflow_ng
 package = Userpoints
-
+core = 6.x

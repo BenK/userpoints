@@ -1,5 +1,6 @@
-; $Id: userpoints_basic.info,v 1.8 2008-03-09 00:31:50 kbahey Exp $
+; $Id: userpoints_basic.info,v 1.9 2008-03-26 20:12:43 kbahey Exp $
 name = Userpoints Basic
 description = Userpoints for core Drupal, such as posting nodes and comments, and moderating comments.
 package = Userpoints
-dependencies = userpoints
+dependencies[] = userpoints
+core = 6.x
