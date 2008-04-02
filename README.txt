@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.10 2008-03-26 20:12:43 kbahey Exp $
+$Id: README.txt,v 1.11 2008-04-02 23:42:32 kbahey Exp $
 
 Copyright 2005-2008 http://2bits.com
 
