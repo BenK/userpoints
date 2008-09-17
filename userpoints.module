@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.67.2.7 2008-05-05 19:03:46 kbahey Exp $
+//$Id: userpoints.module,v 1.67.2.8 2008-09-17 23:02:58 kbahey Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1792,4 +1792,13 @@ function theme_userpoints_list_my_userpoints($args, $header, $rows) {
   $output .= theme('pager', NULL, $pager_limit, 0);
 
   return $output;
+}
+
+/**
+ *  Implement hook_views_api().
+ */
+function userpoints_views_api() {
+  return array(
+    'api' => 2.0,
+  );
 }
