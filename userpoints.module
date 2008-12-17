@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.67.2.12 2008-12-01 19:15:18 kbahey Exp $
+//$Id: userpoints.module,v 1.67.2.13 2008-12-17 22:24:41 kbahey Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -71,12 +71,10 @@ function userpoints_txn_status() {
 function userpoints_help($path, $arg) {
   switch ($path) {
     case 'admin/settings/userpoints':
-      $output = t('Configure userpoints moderation and branding translation', userpoints_translation());
-      break;
+      return t('Configure userpoints moderation and branding translation', userpoints_translation());
     case 'admin/help#userpoints':
-      $output = t('Users earn !points as they post nodes, comments, and vote on nodes', userpoints_translation());
+      return t('Users earn !points as they post nodes, comments, and vote on nodes', userpoints_translation());
   }
-  return $output;
 }
 
 /**

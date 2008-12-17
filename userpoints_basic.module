@@ -1,6 +1,6 @@
 <?php
 
-//$Id: userpoints_basic.module,v 1.10.2.1 2008-04-17 16:32:24 kbahey Exp $
+//$Id: userpoints_basic.module,v 1.10.2.2 2008-12-17 22:24:41 kbahey Exp $
 
 // Copyright 2005 Khalid Baheyeldin http://2bits.com
 
@@ -13,10 +13,8 @@ define('USERPOINTS_USE_V2BUG',    'userpoints_use_v2bug');
 function userpoints_basic_help($path, $arg) {
   switch ($path) {
     case 'admin/settings/userpoints_basic':
-      $output = t('<strong>UP:</strong> Some basic interfaces for userpoints, such as posting nodes, comments, ...etc.');
-      break;
+      return t('<strong>UP:</strong> Some basic interfaces for userpoints, such as posting nodes, comments, ...etc.');
   }
-  return $output;
 }
 
 function userpoints_basic_userpoints($op, $points = 0, $uid = 0, $event = '') {
