@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.67.2.16 2008-12-17 22:56:06 kbahey Exp $
+//$Id: userpoints.module,v 1.67.2.17 2008-12-18 01:43:34 kbahey Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1613,6 +1613,7 @@ function userpoints_list_my_userpoints() {
     WHERE uid = %d 
     GROUP BY p.tid, t.name";
   $results = db_query($sql, $uid);  
+  $grand_total = 0;
   while ($result = db_fetch_array($results)) {
     if ($result['name'] == null) {
       $result['name'] = t('!Uncategorized', userpoints_translation());
