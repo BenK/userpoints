@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.67.2.18 2009-01-06 04:21:33 jredding Exp $
+//$Id: userpoints.module,v 1.67.2.19 2009-01-06 21:16:27 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -634,12 +634,9 @@ function _userpoints_transaction(&$params) {
         $params['status'] = 0;
       }
     }
-		if($params['expirydate'] == '') {
-			drupal_set_message("emptyempty");
-		}
     if (isset($params['expirydate']) && !is_numeric($params['expirydate'])) {
-			return false;	
-		}
+      return false;	
+    }
 
     // check if parameters are set
     $params_null_check = array('operation', 'description', 'reference', 'expired', 'parent_txn_id', 'entity_id', 'entity_type');
