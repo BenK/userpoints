@@ -1,5 +1,5 @@
 <?php
-// $Id: userpoints.install,v 1.15.2.1 2008-06-09 22:30:05 kbahey Exp $
+// $Id: userpoints.install,v 1.15.2.2 2009-01-09 08:41:49 jredding Exp $
 
 /**
  * Implementation of hook_schema().
@@ -235,5 +235,11 @@ function userpoints_update_8() {
 function userpoints_update_6009() {
   $ret = array();
   db_add_index($ret, 'userpoints', 'uid_tid', array('uid', 'tid'));
+  return $ret;
+}
+
+function userpoints_update_6010() {
+  $ret = array();
+  $ret[] = update_sql("UPDATE {permission} SET perm = REPLACE(perm, 'admin userpoints', 'administer userpoints') WHERE perm LIKE '%admin userpoints%'");
   return $ret;
 }
