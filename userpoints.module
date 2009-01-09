@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.67.2.25 2009-01-09 09:35:13 jredding Exp $
+//$Id: userpoints.module,v 1.67.2.26 2009-01-09 10:02:01 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1535,7 +1535,6 @@ function expiry_dates() {
  */
 function userpoints_date_to_timestamp($date) {
   //This takes the FAPI date form array and returns a timestamp
-drupal_set_message("DEFAULT TIMEZONE". variable_get('date_default_timezone', 0));
   if ($date) {
     return mktime(0, 0, 0, $date['month'], $date['day'], $date['year']);
   }
