@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.10.2.1 2009-01-09 10:30:55 jredding Exp $
+$Id: README.txt,v 1.10.2.2 2009-01-09 10:38:46 jredding Exp $
 
 Copyright 2005-2008 http://2bits.com
 
@@ -140,7 +140,7 @@ userpoints_userpointsapi()
 
   
 //---Hooks
-hook_userpoints($op, $params) 
+hook_userpoints($op, $params = array()) 
 
   Use this hook to act upon certain operations. When other modules award
   points to a user, your hook will be called, among others.
