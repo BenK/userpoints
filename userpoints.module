@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.67.2.28 2009-01-09 17:51:17 jredding Exp $
+//$Id: userpoints.module,v 1.67.2.29 2009-01-09 17:52:03 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1235,7 +1235,6 @@ function userpoints_admin_points() {
 
   //Check for filtering
   if ( $tid === 0) {
-	  drupal_set_message("entering 0");
     $sql .= "WHERE p.tid = 0";
     $cat = t('!Uncategorized', userpoints_translation()); 
   }
