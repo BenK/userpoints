@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.67.2.32 2009-01-11 16:25:51 jredding Exp $
+//$Id: userpoints.module,v 1.67.2.33 2009-01-11 16:35:18 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -141,7 +141,7 @@ function userpoints_menu() {
     'type'             => MENU_CALLBACK
   );
   $items['admin/user/userpoints/decline'] = array(
-    'title'            => 'Approve Userpoints',
+    'title'            => t('Approve !points', userpoints_translation()),
     'page callback'    => 'userpoints_admin_approve',
     'access arguments' => array(USERPOINTS_PERM_ADMIN),
     'type'             => MENU_CALLBACK
