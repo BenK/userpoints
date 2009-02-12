@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.67.2.37 2009-02-12 15:42:06 jredding Exp $
+//$Id: userpoints.module,v 1.67.2.38 2009-02-12 17:17:52 jredding Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -842,7 +842,7 @@ function userpoints_user($op, &$edit, &$account, $category = '') {
 	        if (!is_null($details)) {
 						$details .= ', ';
 					}
-          $details .= l(t('Adjust'), 'admin/user/userpoints/add/'. $account->uid, array('attributes' => array('title' => t('Add/substract !points from this user'))));
+          $details .= l(t('Adjust'), 'admin/user/userpoints/add/'. $account->uid, array('attributes' => array('title' => t('Add/substract !points from this user', userpoints_translation()))));
         }
 
         //Which points are we display? 
