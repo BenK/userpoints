@@ -1,5 +1,5 @@
 <?php
-// $Id: userpoints.views.inc,v 1.1.2.3 2009-01-11 16:25:51 jredding Exp $
+// $Id: userpoints.views.inc,v 1.1.2.4 2009-04-08 01:11:33 kbahey Exp $
 
 /**
  *  @file
@@ -59,6 +59,18 @@ function userpoints_views_data() {
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
+    ),
+  );
+
+  // Add relationship to user table.
+  $data['userpoints']['uid'] = array(
+    'title' => t('User'),
+    'help' => t('Relate the userpoints table to the user table.'),
+    'relationship' => array(
+      'base' => 'users',
+      'field' => 'uid',
+      'label' => t('Users'),
+      'handler' => 'views_handler_relationship',
     ),
   );
 
