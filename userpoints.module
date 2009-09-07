@@ -1,5 +1,5 @@
 <?php
-//$Id: userpoints.module,v 1.67.2.45 2009-07-18 21:50:12 kbahey Exp $
+//$Id: userpoints.module,v 1.67.2.46 2009-09-07 23:11:57 kbahey Exp $
 
 // Copyright 2005-2007 Khalid Baheyeldin http://2bits.com
 
@@ -1507,7 +1507,7 @@ function userpoints_block($op = 'list', $delta = 0, $edit = array()) {
       if ($delta == -1 && (user_access(USERPOINTS_PERM_VIEW) || user_access(USERPOINTS_PERM_VIEW_OWN))) {
           $title = t('@user\'s !points', array_merge(array('@user' => $user->name), userpoints_translation()));;
           if ($user->uid) {
-            $points = (int) db_result(db_query('SELECT points FROM {userpoints} WHERE uid = %d', $user->uid));
+            $points = userpoints_get_current_points($account->uid, variable_get(USERPOINTS_CATEGORY_PROFILE_DISPLAY_TID, 0));
             $show_points = format_plural($points, '!point', '!points', userpoints_translation());
             $content = t('You have %p %c', array('%p' => $points, '%c' => $show_points));
           }
