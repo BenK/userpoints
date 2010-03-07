@@ -1,5 +1,5 @@
 <?php
-// $Id: userpoints.views.inc,v 1.1.2.4 2009-04-08 01:11:33 kbahey Exp $
+// $Id: userpoints.views.inc,v 1.1.2.5 2010-03-07 21:14:30 kbahey Exp $
 
 /**
  *  @file
@@ -33,6 +33,10 @@ function userpoints_views_data() {
       'left_field' => 'uid',
       'field' => 'uid',
     ),
+    'term_data' => array(
+      'left_field' => 'tid',
+      'field' => 'tid',
+    ),
     // This goes to the node so that we have consistent authorship.
     'node_revisions' => array(
       'left_table' => 'node',
@@ -56,6 +60,26 @@ function userpoints_views_data() {
     ),
     'filter' => array(
       'handler' => 'views_handler_filter_numeric',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+  
+    // Describe the tid column of the userpoints table.
+  $data['userpoints']['tid'] = array(
+    'title' => t('Userpoints Category', userpoints_translation()),
+    'help' => t('The categories (terms) of userpoints used', userpoints_translation()), // The help that appears on the UI,
+    'field' => array(
+      'handler' => 'views_handler_filter_term_node_tid',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_filter_term_node_tid',
+      'numeric' => TRUE,
+      'name field' => 'category', // display this field in the summary
+    ),
+    'filter' => array(
+  	    'handler' => 'views_handler_filter_term_node_tid',
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
