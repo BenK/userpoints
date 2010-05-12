@@ -1,5 +1,5 @@
 <?php
-// $Id: userpoints.views.inc,v 1.1.2.6 2010-04-19 03:34:18 kbahey Exp $
+// $Id: userpoints.views.inc,v 1.1.2.7 2010-05-12 16:40:27 kbahey Exp $
 
 /**
  *  @file
@@ -83,6 +83,42 @@ function userpoints_views_data() {
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
+    ),
+  );
+
+  // Describe the max_points column of the userpoints table.
+  $data['userpoints']['max_points'] = array(
+    'title' => t('Max !points', userpoints_translation()),
+    'help' => t("A User's max !points.", userpoints_translation()), // The help that appears on the UI,
+    'field' => array(
+      'handler' => 'views_handler_field_numeric',
+      'click sortable' => TRUE,
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+      'numeric' => TRUE,
+      'name field' => 'max_points', // display this field in the summary
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  // Describe the last_update column of the userpoints table.
+  $data['userpoints']['last_update'] = array(
+    'title' => t('Last update'),
+    'help' => t("The last update timestamp for a User's current !points.", userpoints_translation()),
+    'field' => array(
+      'handler' => 'views_handler_field_date',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
     ),
   );
 
