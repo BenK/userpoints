@@ -891,15 +891,14 @@ function userpoints_user_view($account, $view_mode) {
     //Which points are we display?
     $points = userpoints_get_current_points($account->uid, variable_get(USERPOINTS_CATEGORY_PROFILE_DISPLAY_TID, 0));
 
-    /*$account->content['userpoints'] = array(
-      '#type' => 'fieldset',
+    $account->content['userpoints'] = array(
+      '#type' => 'user_profile_category',
       '#title' => t('User !points', userpoints_translation()),
-      '#attributes' => array(),
-      '#parents' => array(),
-    );*/
-    $account->content['points'] = array(
+    );
+    $account->content['userpoints']['points'] = array(
+      '#type' => 'user_profile_item',
       '#title' => t('!Points', userpoints_translation()),
-      '#markup' => $details ? $points .' - '. $details : $points,
+      '#value' => $details ? $points .' - '. $details : $points,
     );
   }
 }

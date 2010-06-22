@@ -5,3 +5,4 @@ package = Userpoints
 core = 7.x
 files[]=userpoints.views.inc
 files[]=userpoints.module
+files[]=tests/userpoints_api.test
