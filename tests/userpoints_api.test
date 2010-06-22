@@ -412,7 +412,7 @@ class UserpointsTestCase extends DrupalWebTestCase {
     $this->drupalLogin($admin_user);
 
     /*check access page*/
-    $this->drupalGet('admin/user/userpoints');
+    $this->drupalGet('admin/config/people/userpoints');
     $content = $this->drupalGetContent();
     $content = strstr($content, 'Access denied');
     $this->assertTrue($content == false, t("Successful navigated to the page modify points"));
@@ -422,7 +422,7 @@ class UserpointsTestCase extends DrupalWebTestCase {
       'txn_user' => $admin_user->name,
       'points' => $points,
     );
-    $this->drupalPost('admin/user/userpoints/add', $edit, 'Save');
+    $this->drupalPost('admin/config/people/userpoints/add', $edit, 'Save');
 
     /* check database */
     $sql = "SELECT points FROM {userpoints_txn} WHERE uid=%d AND points=%d";
@@ -437,7 +437,7 @@ class UserpointsTestCase extends DrupalWebTestCase {
     $this->drupalLogin($view_user);
 
     /*check access page*/
-    $this->drupalGet('admin/user/userpoints');
+    $this->drupalGet('admin/config/people/userpoints');
     $content = $this->drupalGetContent();
     $content = strstr($content, 'Access denied');
     $this->assertTrue(is_string($content), t("Successful verified that a user without admin userpoints permissions can not modify points."));
@@ -452,7 +452,7 @@ class UserpointsTestCase extends DrupalWebTestCase {
       'txn_user' => $view_user->name,
       'points' => $points,
     );
-    $this->drupalPost('admin/user/userpoints/add', $edit, 'Save');
+    $this->drupalPost('admin/config/people/userpoints/add', $edit, 'Save');
 */
 
     /* check database */
