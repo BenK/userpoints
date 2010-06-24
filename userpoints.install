@@ -2,6 +2,11 @@
 // $Id: userpoints.install,v 1.15.2.6 2010-02-04 21:09:56 kbahey Exp $
 
 /**
+ * @file
+ * Install time hook userpoints module.
+ */
+
+/**
  * Implements hook_schema().
  */
 function userpoints_schema() {
@@ -48,10 +53,12 @@ function userpoints_schema() {
     'primary key' => array('pid'),
     'indexes' => array(
       'last_update' => array('last_update'),
+    ),
+    'unique keys' => array(
       'uid_tid' => array('uid', 'tid'),
     ),
   );
-  
+
   $schema['userpoints_txn'] = array(
     'description' => 'Userpoints Transactions',
     'fields' => array(
@@ -147,7 +154,7 @@ function userpoints_schema() {
         'type' => 'varchar',
         'length' => 32,
       ),
-      
+
     ),
     'primary key' => array('txn_id'),
     'indexes' => array(

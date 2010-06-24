@@ -7,7 +7,7 @@
  */
 
 /**
- * Implementation of hook_rules_data_type_info().
+ * Implements hook_rules_data_type_info().
  */
 function userpoints_rules_data_type_info() {
   return array(
@@ -21,7 +21,7 @@ function userpoints_rules_data_type_info() {
 }
 
 /**
- * Implementation of hook_rules_action_info().
+ * Implements hook_rules_action_info().
  */
 function userpoints_rules_action_info() {
   return array(
@@ -37,7 +37,7 @@ function userpoints_rules_action_info() {
 }
 
 /**
- * Implementation of hook_rules_event_info().
+ * Implements hook_rules_event_info().
  */
 function userpoints_rules_event_info() {
   return array(
@@ -102,7 +102,7 @@ function userpoints_action_grant_points_form($settings = array(), &$form) {
  */
 
 /**
- * Implementation of hook_rules_condition_info().
+ * Implements hook_rules_condition_info().
  */
 function userpoints_rules_rules_condition_info() {
   return array(
