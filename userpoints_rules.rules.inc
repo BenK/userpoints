@@ -3,18 +3,24 @@
 
 /**
  * @file
- * Provide better integration into the rules module
+ * Provide better integration into the rules group
  */
 
 /**
  * Implements hook_rules_data_type_info().
  */
-function userpoints_rules_data_type_info() {
+function userpoints_rules_rules_data_type_info() {
   return array(
     'userpoints_transaction' => array(
       'label' => t('Userpoints transaction'),
-      'class' => 'rules_data_type',
-      'identifiable' => FALSE,
+      'property info' => array(
+        'points' => array('label' => t('!Points', userpoints_translation()), 'type' => 'integer'),
+        'tid' => array('label' => t('Userpoints category'), 'type' => 'integer'),
+        'entity_type' => array('label' => t('Entity type'), 'type' => 'text'),
+        'entity_id' => array('label' => t('Entity id'), 'type' => 'integer'),
+        'description' => array('label' => t('Description'), 'type' => 'text'),
+        'operation' => array('label' => t('Operation'), 'type' => 'text'),
+      ),
       'hidden' => TRUE,
     ),
   );
@@ -23,15 +29,20 @@ function userpoints_rules_data_type_info() {
 /**
  * Implements hook_rules_action_info().
  */
-function userpoints_rules_action_info() {
+function userpoints_rules_rules_action_info() {
   return array(
     'userpoints_action_grant_points' => array(
       'label' => t('Grant !points to a user', userpoints_translation()),
-      'arguments' => array(
-          'user' => array('type' => 'user', 'label' => t('User'))
+      'parameter' => array(
+          'user' => array('type' => 'user', 'label' => t('User')),
+          'points' => array('type' => 'integer', 'label' => t('!Points', userpoints_translation())),
+          'tid' => array('label' => t('Userpoints category'), 'type' => 'integer'),
+          'entity_type' => array('label' => t('Entity type'), 'type' => 'text'),
+          'entity_id' => array('label' => t('Entity id'), 'type' => 'integer'),
+          'description' => array('label' => t('Description'), 'type' => 'text'),
+          'operation' => array('label' => t('Operation'), 'type' => 'text'),
         ),
-      'module' => 'Userpoints',
-      'eval input' => array('points', 'entity_id'),
+      'group' => t('!Points', userpoints_translation()),
     ),
   );
 }
@@ -39,15 +50,15 @@ function userpoints_rules_action_info() {
 /**
  * Implements hook_rules_event_info().
  */
-function userpoints_rules_event_info() {
+function userpoints_rules_rules_event_info() {
   return array(
     'userpoints_event_points_awarded' => array(
        'label' => t('User was awarded !points', userpoints_translation()),
-       'arguments' => array(
+       'variables' => array(
           'user' => array('type' => 'user', 'label' => t('User')),
           'userpoints_transaction' => array('type' => 'userpoints_transaction', 'label' => t('Userpoints transaction'))
         ),
-       'module' => 'Userpoints',
+       'group' => t('!Points', userpoints_translation()),
     ),
   );
 }
@@ -55,14 +66,22 @@ function userpoints_rules_event_info() {
 /**
  * Rules action - grant points to a user.
  */
-function userpoints_action_grant_points($account, $settings) {
-  userpoints_userpointsapi(array('uid' => $account->uid, 'points' => $settings['points'], 'tid' => $settings['tid'], 'entity_type' => $settings['entity_type'], 'entity_id' => $settings['entity_id'], 'description' => $settings['description'], 'operation' => $settings['operation']));
+function userpoints_action_grant_points($account, $points, $tid, $type, $id, $desc, $op) {
+  userpoints_userpointsapi(array(
+    'uid' => $account->uid,
+    'points' => $points,
+    'tid' => $tid,
+    'entity_type' => $type,
+    'entity_id' => $id,
+    'description' => $desc,
+    'operation' => $op,
+  ));
 }
 
 /**
  * Rules action form configuration - allow number of points to be set.
  */
-function userpoints_action_grant_points_form($settings = array(), &$form) {
+function userpoints_action_grant_points_form2($settings = array(), &$form) {
   $form['settings']['points'] = array(
     '#type' => 'textfield',
     '#title' => t('Number of points'),
@@ -92,8 +111,8 @@ function userpoints_action_grant_points_form($settings = array(), &$form) {
     '#default_value' => isset($settings['entity_id']) ? $settings['entity_id'] : '',
     '#description' => t('ID of an entity in the Database. ex. $node->id or $user->uid')
   );
-  $form['settings']['tid'] = taxonomy_form(userpoints_get_vid(), isset($settings['tid']) ? $settings['tid'] : '', 'The category ID');
-
+  //$form['settings']['tid'] = taxonomy_form(userpoints_get_vid(), isset($settings['tid']) ? $settings['tid'] : '', 'The category ID');
+  return $form;
 }
 
 
@@ -108,35 +127,32 @@ function userpoints_rules_rules_condition_info() {
   return array(
     'userpoints_rules_category' => array(
       'label' => t('Check the transaction category'),
-      'arguments' => array(
+      'parameter' => array(
         'userpoints_transaction' => array('type' => 'userpoints_transaction', 'label' => t('Userpoints transaction'))
       ),
-      'module' => 'Userpoints',
+      'group' => t('!Points', userpoints_translation()),
     ),
     'userpoints_rules_amount_before' => array(
       'label' => t('Compare Userpoints before the transaction'),
-      'arguments' => array(
+      'parameter' => array(
         'user' => array('type' => 'user', 'label' => t('User')),
         'userpoints_transaction' => array('type' => 'userpoints_transaction', 'label' => t('Userpoints transaction'))
       ),
-      'module' => 'Userpoints',
-      'eval input' => array('amount'),
+      'group' => t('!Points', userpoints_translation()),
     ),
     'userpoints_rules_transaction_amount' => array(
       'label' => t('Compare the transaction amount'),
-      'arguments' => array(
+      'parameter' => array(
         'userpoints_transaction' => array('type' => 'userpoints_transaction', 'label' => t('Userpoints transaction'))
       ),
-      'module' => 'Userpoints',
-      'eval input' => array('amount'),
+      'group' => t('!Points', userpoints_translation()),
     ),
     'userpoints_rules_amount' => array(
       'label' => t('Compare current Userpoints'),
-      'arguments' => array(
+      'parameter' => array(
         'user' => array('type' => 'user', 'label' => t('User')),
       ),
-      'module' => 'Userpoints',
-      'eval input' => array('amount'),
+      'group' => t('!Points', userpoints_translation()),
     ),
   );
 }
@@ -144,7 +160,7 @@ function userpoints_rules_rules_condition_info() {
 /**
  * Rules Condition form configuration - set the amount to compare
  */
-function userpoints_rules_amount_form($settings = array(), &$form, $use_category = TRUE) {
+function userpoints_rules_amount_form2($settings = array(), &$form, $use_category = TRUE) {
   if ($use_category) {
     $form['settings']['type'] = array(
       '#type' => 'select',
@@ -178,7 +194,7 @@ function userpoints_rules_transaction_amount($transaction, $settings) {
   return $transaction['points'] >= $settings['amount'];
 }
 
-function userpoints_rules_transaction_amount_form($settings = array(), &$form) {
+function userpoints_rules_transaction_amount_form2($settings = array(), &$form) {
   return userpoints_rules_amount_form($settings, $form, FALSE);
 }
 
@@ -190,7 +206,7 @@ function userpoints_rules_amount_before($account, $transaction, $settings) {
   return $balance >= $settings['amount'];
 }
 
-function userpoints_rules_amount_before_form($settings = array(), &$form) {
+function userpoints_rules_amount_before_form2($settings = array(), &$form) {
   return userpoints_rules_amount_form($settings, $form);
 }
 
@@ -204,7 +220,7 @@ function userpoints_rules_category($transaction, $settings) {
 /**
  * Condition: check the transaction category configuration form
  */
-function userpoints_rules_category_form($settings = array(), &$form) {
+function userpoints_rules_category_form2($settings = array(), &$form) {
   $form['settings']['category'] = array(
     '#type' => 'select',
     '#title' => t('Userpoints category'),
